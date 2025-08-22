@@ -3,5 +3,4 @@ pandas
 matplotlib
 plotly
 seaborn
-collections
 numpy
