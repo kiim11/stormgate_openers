@@ -6,6 +6,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from collections import Counter
 import numpy as np
+import os
 
 # Set page configuration
 st.set_page_config(
@@ -44,12 +45,31 @@ def load_data(file_path):
     
     return df
 
-# File upload
-uploaded_file = st.sidebar.file_uploader("Upload your Stormgate data CSV", type="csv")
+# Check if default.csv exists and load it automatically
+default_csv_path = "default.csv"
+default_data_loaded = False
+df = None
+
+if os.path.exists(default_csv_path):
+    try:
+        df = load_data(default_csv_path)
+        default_data_loaded = True
+        st.sidebar.success("📊 Loaded default.csv automatically")
+    except Exception as e:
+        st.sidebar.error(f"Error loading default.csv: {e}")
+
+# File upload - always show even if default data is loaded
+uploaded_file = st.sidebar.file_uploader("Or upload a different CSV file", type="csv")
 
 if uploaded_file is not None:
-    df = load_data(uploaded_file)
-    
+    try:
+        df = load_data(uploaded_file)
+        default_data_loaded = False
+        st.sidebar.success("📊 Uploaded file loaded successfully")
+    except Exception as e:
+        st.sidebar.error(f"Error loading uploaded file: {e}")
+
+if df is not None:
     # Sidebar filters
     st.sidebar.markdown("### Filters")
     
@@ -71,7 +91,7 @@ if uploaded_file is not None:
         default=df['league_before'].unique()
     )
     
-    # NEW: Filter for opponent league
+    # Filter for opponent league
     selected_opponent_leagues = st.sidebar.multiselect(
         "Select Opponent Leagues",
         options=df['opponent_league_before'].unique(),
@@ -83,8 +103,14 @@ if uploaded_file is not None:
         (df['race'].isin(selected_races)) &
         (df['opponent_race'].isin(selected_opponents)) &
         (df['league_before'].isin(selected_leagues)) &
-        (df['opponent_league_before'].isin(selected_opponent_leagues))  # NEW: opponent league filter
+        (df['opponent_league_before'].isin(selected_opponent_leagues))
     ]
+    
+    # Display data source info
+    if default_data_loaded:
+        st.sidebar.info("Using data from: default.csv")
+    else:
+        st.sidebar.info("Using data from: uploaded file")
     
     # Display basic metrics
     col1, col2, col3, col4 = st.columns(4)
@@ -152,7 +178,7 @@ if uploaded_file is not None:
             fig.update_layout(yaxis_range=[0, 100])
             st.plotly_chart(fig, use_container_width=True)
             
-        # NEW: Win rate by opponent league
+        # Win rate by opponent league
         st.markdown('<div class="sub-header">Win Rate by Opponent League</div>', unsafe_allow_html=True)
         opponent_league_win_rate = filtered_df.groupby('opponent_league_before')['win'].agg(['mean', 'count']).reset_index()
         opponent_league_win_rate['win_percentage'] = opponent_league_win_rate['mean'] * 100
@@ -207,7 +233,7 @@ if uploaded_file is not None:
         col3, col4 = st.columns(2)
         
         with col3:
-            # NEW: First 5 structures
+            # First 5 structures
             structure_5_counts = filtered_df['first_5_structures'].value_counts().head(10)
             fig = px.bar(
                 x=structure_5_counts.values,
@@ -219,7 +245,7 @@ if uploaded_file is not None:
             st.plotly_chart(fig, use_container_width=True)
         
         with col4:
-            # NEW: First 6 structures
+            # First 6 structures
             structure_6_counts = filtered_df['first_6_structures'].value_counts().head(10)
             fig = px.bar(
                 x=structure_6_counts.values,
@@ -300,7 +326,7 @@ if uploaded_file is not None:
         col3, col4 = st.columns(2)
         
         with col3:
-            # NEW: Get top unit combinations for 4 units
+            # Get top unit combinations for 4 units
             unit_4_list = filtered_df['units_4'].dropna().tolist()
             unit_4_counter = Counter(unit_4_list)
             top_unit_4 = dict(unit_4_counter.most_common(10))
@@ -315,7 +341,7 @@ if uploaded_file is not None:
             st.plotly_chart(fig, use_container_width=True)
             
         with col4:
-            # NEW: Get top unit compositions (all units)
+            # Get top unit compositions (all units)
             # First, we need to process the units_comp column which contains all units with counts
             # This is a more complex processing, so we'll create a simplified version
             # Let's count how many times each unit appears in the composition strings
@@ -406,11 +432,11 @@ if uploaded_file is not None:
         st.dataframe(filtered_df)
 
 else:
-    st.info("👈 Please upload a CSV file to begin analysis.")
+    st.info("👈 Please upload a CSV file to begin analysis or place a 'default.csv' file in the same directory.")
     st.markdown("""
     ### How to use this dashboard:
     1. Run the scraping script to collect Stormgate data
-    2. Upload the generated CSV file using the sidebar uploader
+    2. Save the CSV as 'default.csv' in the same directory or upload it using the sidebar
     3. Use the filters to select specific races, opponents, and leagues
     4. Explore the different tabs to analyze various aspects of the data
     
@@ -419,9 +445,14 @@ else:
     - **Opening Strategies**: Discover the most common and effective opening builds
     - **Unit Compositions**: Analyze which unit combinations are popular and successful
     - **Map Analysis**: Understand map preferences and performance on different maps
+    
+    ### For Streamlit deployment:
+    - Place your CSV file named 'default.csv' in the same directory as this script
+    - The app will automatically load it when deployed
+    - Users can still upload different files if needed
     """)
 
 # Footer
 st.markdown("---")
 st.markdown("### About")
-st.markdown("This dashboard analyzes Stormgate match data to help players understand strategies, win rates, and meta trends. Stormgate is a free-to-play real-time strategy game developed by Frost Giant Studios that features asymmetric factions, deep strategic gameplay, and a competitive ladder system :cite[2]:cite[4].")
+st.markdown("This dashboard analyzes Stormgate match data to help players understand strategies, win rates, and meta trends. Stormgate is a free-to-play real-time strategy game developed by Frost Giant Studios.")
