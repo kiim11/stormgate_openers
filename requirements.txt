@@ -1,0 +1,8 @@
+streamlit
+pandas
+pyplot
+seaborn
+express
+graph_objects
+collections
+numpy
