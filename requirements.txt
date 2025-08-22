@@ -1,8 +1,7 @@
 streamlit
 pandas
-pyplot
+plotly
 seaborn
-express
 graph_objects
 collections
 numpy
