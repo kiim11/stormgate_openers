@@ -84,6 +84,8 @@ st.markdown("""
         margin-left: 10px;
         min-width: 50px;
         text-align: right;
+        display: inline-block;  /* Add this */
+        vertical-align: middle; /* Add this */
     }
     .rank-number {
         font-weight: bold;
@@ -771,24 +773,27 @@ if st.session_state.data_loaded:
                 st.markdown("**Top 10 Three-Unit Combinations**")
                 for i, (unit_combo, count) in enumerate(top_unit_3.items()):
                     unit_ids = extract_ids_from_composition(unit_combo)
-                    # Only show if it's actually 3 units
-                    if len(unit_ids) == 3:
-                        st.markdown(f'<div class="icon-row"><span class="rank-number">#{i+1}</span>', unsafe_allow_html=True)
-                        
-                        # Create icon container
-                        icon_html = '<div class="icon-container">'
-                        for unit_id in unit_ids:
-                            icon = get_unit_icon(unit_id.strip())
-                            unit_name = get_unit_name(unit_id.strip())
-                            if icon:
-                                icon_base64 = image_to_base64(icon)
-                                icon_html += f'<img src="data:image/png;base64,{icon_base64}" class="unit-icon" title="{unit_name}">'
-                            else:
-                                icon_html += f'<span title="{unit_name}">{unit_id.strip()}</span>'
-                        icon_html += f'<span class="structure-count">{count}</span></div>'
-                        
-                        st.markdown(icon_html, unsafe_allow_html=True)
-                        st.markdown('</div>', unsafe_allow_html=True)
+                    
+                    # Create a container with flex display for proper alignment
+                    st.markdown(
+                        f'<div style="display: flex; align-items: center; margin-bottom: 10px; padding: 5px; border-radius: 5px; background-color: #f8f9fa;">'
+                        f'<span class="rank-number">#{i+1}</span>'
+                        f'<div class="icon-container">',
+                        unsafe_allow_html=True
+                    )
+                    
+                    # Add unit icons
+                    for unit_id in unit_ids:
+                        icon = get_unit_icon(unit_id.strip())
+                        unit_name = get_unit_name(unit_id.strip())
+                        if icon:
+                            icon_base64 = image_to_base64(icon)
+                            st.markdown(f'<img src="data:image/png;base64,{icon_base64}" class="unit-icon" title="{unit_name}">', unsafe_allow_html=True)
+                        else:
+                            st.markdown(f'<span title="{unit_name}" style="margin: 2px;">{unit_id.strip()}</span>', unsafe_allow_html=True)
+                    
+                    # Add the count with proper alignment
+                    st.markdown(f'</div><span class="structure-count">{count}</span></div>', unsafe_allow_html=True)
                     
             else:
                 st.info("No data available for three-unit combinations")
@@ -799,34 +804,37 @@ if st.session_state.data_loaded:
             # Get top unit combinations for 4 units
             unit_4_list = st.session_state.filtered_df['units_4'].dropna().tolist()
             if unit_4_list:
-                unit_4_counter = Counter(unit_4_list)
+                unit_4_counter = Counter(unit_3_list)
                 top_unit_4 = dict(unit_4_counter.most_common(10))
                 
                 # Create a custom visualization with icons
                 st.markdown("**Top 10 Four-Unit Combinations**")
-                for i, (unit_combo, count) in enumerate(top_unit_4.items()):
+                for i, (unit_combo, count) in enumerate(top_unit_3.items()):
                     unit_ids = extract_ids_from_composition(unit_combo)
-                    # Only show if it's actually 4 units
-                    if len(unit_ids) == 4:
-                        st.markdown(f'<div class="icon-row"><span class="rank-number">#{i+1}</span>', unsafe_allow_html=True)
-                        
-                        # Create icon container
-                        icon_html = '<div class="icon-container">'
-                        for unit_id in unit_ids:
-                            icon = get_unit_icon(unit_id.strip())
-                            unit_name = get_unit_name(unit_id.strip())
-                            if icon:
-                                icon_base64 = image_to_base64(icon)
-                                icon_html += f'<img src="data:image/png;base64,{icon_base64}" class="unit-icon" title="{unit_name}">'
-                            else:
-                                icon_html += f'<span title="{unit_name}">{unit_id.strip()}</span>'
-                        icon_html += f'<span class="structure-count">{count}</span></div>'
-                        
-                        st.markdown(icon_html, unsafe_allow_html=True)
-                        st.markdown('</div>', unsafe_allow_html=True)
+                    
+                    # Create a container with flex display for proper alignment
+                    st.markdown(
+                        f'<div style="display: flex; align-items: center; margin-bottom: 10px; padding: 5px; border-radius: 5px; background-color: #f8f9fa;">'
+                        f'<span class="rank-number">#{i+1}</span>'
+                        f'<div class="icon-container">',
+                        unsafe_allow_html=True
+                    )
+                    
+                    # Add unit icons
+                    for unit_id in unit_ids:
+                        icon = get_unit_icon(unit_id.strip())
+                        unit_name = get_unit_name(unit_id.strip())
+                        if icon:
+                            icon_base64 = image_to_base64(icon)
+                            st.markdown(f'<img src="data:image/png;base64,{icon_base64}" class="unit-icon" title="{unit_name}">', unsafe_allow_html=True)
+                        else:
+                            st.markdown(f'<span title="{unit_name}" style="margin: 2px;">{unit_id.strip()}</span>', unsafe_allow_html=True)
+                    
+                    # Add the count with proper alignment
+                    st.markdown(f'</div><span class="structure-count">{count}</span></div>', unsafe_allow_html=True)
                     
             else:
-                st.info("No data available for four-unit combinations")
+                st.info("No data available for three-unit combinations")
                 
         with col4:
             # Get top unit compositions (all units)
@@ -876,9 +884,9 @@ if st.session_state.data_loaded:
         unit_comp_win_rates = st.session_state.filtered_df.groupby(unit_col)['win'].agg(['mean', 'count']).reset_index()
         unit_comp_win_rates = unit_comp_win_rates[unit_comp_win_rates['count'] >= 3]  # Only compositions with enough data
         unit_comp_win_rates['win_percentage'] = unit_comp_win_rates['mean'] * 100
-        unit_comp_win_rates['combo_name'] = unit_comp_win_rates[unit_col].apply(get_unit_combo_name)
+        unit_comp_win_rates['combo_name'] = unit_comp_win_rates[unit_col].apply(get_structure_combo_name)
         unit_comp_win_rates['combo_with_icons'] = unit_comp_win_rates[unit_col].apply(
-            lambda x: get_unit_combo_with_icons(x, icon_size=24)
+            lambda x: get_structure_combo_with_icons(x, icon_size=24)
         )
         
         if len(unit_comp_win_rates) > 0:
