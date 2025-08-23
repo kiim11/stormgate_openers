@@ -788,7 +788,7 @@ if st.session_state.data_loaded:
                             icon_html += f'<span title="{unit_name}">{unit_id.strip()}</span>'
                     
                     # Add empty blocks for alignment (4 total slots - 3 used = 1 empty)
-                    for _ in range(4 - len(unit_ids)):
+                    for _ in range(3 - len(unit_ids)):
                         icon_html += '<div class="unit-icon" style="visibility: hidden;"></div>'
                     
                     icon_html += f'<span class="structure-count">{count}</span></div>'
@@ -827,6 +827,11 @@ if st.session_state.data_loaded:
                     
                     # Add empty blocks for alignment (4 total slots - 4 used = 0 empty)
                     # This one doesn't need empty blocks since it uses all slots
+                    
+                    # Add empty blocks for alignment (4 total slots - 3 used = 1 empty)
+                    for _ in range(4 - len(unit_ids)):
+                        icon_html += '<div class="unit-icon" style="visibility: hidden;"></div>'
+                    
                     icon_html += f'<span class="structure-count">{count}</span></div>'
                     
                     st.markdown(icon_html, unsafe_allow_html=True)
