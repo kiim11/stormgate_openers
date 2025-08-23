@@ -675,6 +675,13 @@ if st.session_state.data_loaded:
             )
         
         if len(opening_win_rates) > 0:
+            # Create custom hover data
+            '''hover_data = {
+                'combo_name': True,
+                'count': True,
+                'win_percentage': ':.1f%'
+            }
+        
             fig = px.scatter(
                 opening_win_rates,
                 x='count',
@@ -697,7 +704,22 @@ if st.session_state.data_loaded:
             )
             
             fig.add_hline(y=50, line_dash="dash", line_color="red", annotation_text="50% Win Rate")
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, use_container_width=True)'''
+                # Create a custom visualization with icons
+            for _, row in opening_win_rates.iterrows():
+                col1, col2, col3 = st.columns([3, 1, 1])
+                with col1:
+                    # Display the structure combination with icons
+                    st.markdown(row['combo_with_icons'], unsafe_allow_html=True)
+                with col2:
+                    st.markdown(f"**{row['count']}** games")
+                with col3:
+                    win_color = "green" if row['win_percentage'] >= 50 else "red"
+                    st.markdown(f"<span style='color: {win_color}; font-weight: bold;'>{row['win_percentage']:.1f}%</span>", 
+                               unsafe_allow_html=True)
+                
+                st.progress(row['win_percentage'] / 100)
+                st.markdown("---")
         else:
             st.info(f"Not enough data to display win rates for {structure_option.lower()}")
     
