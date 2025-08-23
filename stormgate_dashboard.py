@@ -6,6 +6,9 @@ import numpy as np
 import os
 import json
 from streamlit_local_storage import LocalStorage
+import requests
+from PIL import Image
+import io
 
 # Set page configuration
 st.set_page_config(
@@ -45,6 +48,18 @@ st.markdown("""
         margin-bottom: 15px;
         text-align: center;
     }
+    .unit-icon {
+        width: 36px;
+        height: 36px;
+        margin-right: 5px;
+        border-radius: 4px;
+        object-fit: cover;
+    }
+    .unit-name {
+        display: flex;
+        align-items: center;
+        margin-bottom: 5px;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -81,6 +96,69 @@ if 'df' not in st.session_state:
 
 if 'filtered_df' not in st.session_state:
     st.session_state.filtered_df = None
+
+# Load units and upgrades data
+@st.cache_data
+def load_units_data():
+    try:
+        with open('units.json', 'r') as f:
+            units_data = json.load(f)
+        return {unit['name']: unit for unit in units_data if 'button_icon_path' in unit}
+    except FileNotFoundError:
+        st.error("units.json file not found. Please make sure it's in the same directory.")
+        return {}
+    except Exception as e:
+        st.error(f"Error loading units.json: {e}")
+        return {}
+
+@st.cache_data
+def load_upgrades_data():
+    try:
+        with open('upgrades.json', 'r') as f:
+            upgrades_data = json.load(f)
+        return {upgrade['name']: upgrade for upgrade in upgrades_data if 'button_icon_path' in upgrade}
+    except FileNotFoundError:
+        st.error("upgrades.json file not found. Please make sure it's in the same directory.")
+        return {}
+    except Exception as e:
+        st.error(f"Error loading upgrades.json: {e}")
+        return {}
+
+# Load units and upgrades data
+units_data = load_units_data()
+upgrades_data = load_upgrades_data()
+
+# Function to get unit icon
+@st.cache_data
+def get_unit_icon(unit_name):
+    if unit_name in units_data:
+        icon_path = units_data[unit_name]['button_icon_path']
+        if icon_path:
+            try:
+                response = requests.get(f"https://stormgatejson.untapped.gg/art/{icon_path}")
+                if response.status_code == 200:
+                    image = Image.open(io.BytesIO(response.content))
+                    image = image.resize((36, 36))
+                    return image
+            except Exception as e:
+                st.error(f"Error loading icon for {unit_name}: {e}")
+    return None
+
+# Function to get upgrade icon
+@st.cache_data
+def get_upgrade_icon(upgrade_name):
+    if upgrade_name in upgrades_data:
+        icon_path = upgrades_data[upgrade_name]['button_icon_path']
+        if icon_path:
+            try:
+                response = requests.get(f"https://stormgatejson.untapped.gg/art/{icon_path}")
+                if response.status_code == 200:
+                    image = Image.open(io.BytesIO(response.content))
+                    image = image.resize((36, 36))
+                    return image
+            except Exception as e:
+                st.error(f"Error loading icon for {upgrade_name}: {e}")
+    return None
 
 # Function to save filters to local storage
 def save_filters_to_storage():
@@ -164,7 +242,6 @@ if st.session_state.data_loaded:
         st.session_state.filters['opponent_leagues'] = []
         save_filters_to_storage()
         st.sidebar.success("Filters cleared!")
-        st.experimental_rerun()
     
     # Reset to default button
     if st.sidebar.button("🔄 Reset to Default Filters"):
@@ -174,7 +251,6 @@ if st.session_state.data_loaded:
         st.session_state.filters['opponent_leagues'] = list(st.session_state.df['opponent_league_before'].unique())
         save_filters_to_storage()
         st.sidebar.success("Filters reset to default!")
-        st.experimental_rerun()
     
     st.sidebar.markdown("---")
     
@@ -182,22 +258,18 @@ if st.session_state.data_loaded:
     def update_races():
         st.session_state.filters['races'] = st.session_state.races_filter
         save_filters_to_storage()
-        #st.experimental_rerun()
         
     def update_opponents():
         st.session_state.filters['opponents'] = st.session_state.opponents_filter
         save_filters_to_storage()
-        #st.experimental_rerun()
         
     def update_leagues():
         st.session_state.filters['leagues'] = st.session_state.leagues_filter
         save_filters_to_storage()
-       # st.experimental_rerun()
         
     def update_opponent_leagues():
         st.session_state.filters['opponent_leagues'] = st.session_state.opponent_leagues_filter
         save_filters_to_storage()
-        #st.experimental_rerun()
     
     # Race filter
     selected_races = st.sidebar.multiselect(
@@ -300,7 +372,7 @@ if st.session_state.data_loaded:
         
         with col2:
             # Win rate by league
-            league_win_rate = st.session_state.filtered_df.groupby('league_before')['win'].agg(['mean', 'count']).reset_index()
+            league_win_rate = st.session_state.filtered_df.groupby('league_before')['win'].agg(['mean','count']).reset_index()
             league_win_rate['win_percentage'] = league_win_rate['mean'] * 100
             league_win_rate = league_win_rate[league_win_rate['count'] >= 5]  # Only show leagues with enough data
             
@@ -402,7 +474,7 @@ if st.session_state.data_loaded:
         with col4:
             # First 6 structures
             structure_6_counts = st.session_state.filtered_df['first_6_structures'].value_counts().head(10)
-            if len(structure_6_counts) > 0:
+           极速 if len(structure_6_counts) > 0:
                 fig = px.bar(
                     x=structure_6_counts.values,
                     y=structure_6_counts.index,
@@ -461,14 +533,25 @@ if st.session_state.data_loaded:
                 unit_2_counter = Counter(unit_2_list)
                 top_unit_2 = dict(unit_2_counter.most_common(10))
                 
-                fig = px.bar(
-                    x=list(top_unit_2.values()),
-                    y=list(top_unit_2.keys()),
-                    orientation='h',
-                    title='Top 10 Two-Unit Combinations',
-                    labels={'x': 'Frequency', 'y': 'Units'}
-                )
-                st.plotly_chart(fig, use_container_width=True)
+                # Create a custom visualization with icons
+                st.markdown("**Top 10 Two-Unit Combinations**")
+                for i, (unit_combo, count) in enumerate(top_unit_2.items()):
+                    units = unit_combo.split('-')
+                    col1, col2 = st.columns([1, 4])
+                    with col1:
+                        st.markdown(f"**#{i+1}**")
+                    with col2:
+                        icon_cols = st.columns(len(units) + 1)
+                        for j, unit in enumerate(units):
+                            with icon_cols[j]:
+                                icon = get_unit_icon(unit.strip())
+                                if icon:
+                                    st.image(icon, caption=unit.strip(), width=36)
+                                else:
+                                    st.text(unit.strip())
+                        with icon_cols[-1]:
+                            st.markdown(f"**{count}**")
+                
             else:
                 st.info("No data available for two-unit combinations")
         
@@ -479,14 +562,25 @@ if st.session_state.data_loaded:
                 unit_3_counter = Counter(unit_3_list)
                 top_unit_3 = dict(unit_3_counter.most_common(10))
                 
-                fig = px.bar(
-                    x=list(top_unit_3.values()),
-                    y=list(top_unit_3.keys()),
-                    orientation='h',
-                    title='Top 10 Three-Unit Combinations',
-                    labels={'x': 'Frequency', 'y': 'Units'}
-                )
-                st.plotly_chart(fig, use_container_width=True)
+                # Create a custom visualization with icons
+                st.markdown("**Top 10 Three-Unit Combinations**")
+                for i, (unit_combo, count) in enumerate(top_unit_3.items()):
+                    units = unit_combo.split('-')
+                    col1, col2 = st.columns([1, 4])
+                    with col1:
+                        st.markdown(f"**#{i+1}**")
+                    with col2:
+                        icon_cols = st.columns(len(units) + 1)
+                        for j, unit in enumerate(units):
+                            with icon_cols[j]:
+                                icon = get_unit_icon(unit.strip())
+                                if icon:
+                                    st.image(icon, caption=unit.strip(), width=36)
+                                else:
+                                    st.text(unit.strip())
+                        with icon_cols[-1]:
+                            st.markdown(f"**{count}**")
+                
             else:
                 st.info("No data available for three-unit combinations")
                 
@@ -499,14 +593,25 @@ if st.session_state.data_loaded:
                 unit_4_counter = Counter(unit_4_list)
                 top_unit_4 = dict(unit_4_counter.most_common(10))
                 
-                fig = px.bar(
-                    x=list(top_unit_4.values()),
-                    y=list(top_unit_4.keys()),
-                    orientation='h',
-                    title='Top 10 Four-Unit Combinations',
-                    labels={'x': 'Frequency', 'y': 'Units'}
-                )
-                st.plotly_chart(fig, use_container_width=True)
+                # Create a custom visualization with icons
+                st.markdown("**Top 10 Four-Unit Combinations**")
+                for i, (unit_combo, count) in enumerate(top_unit_4.items()):
+                    units = unit_combo.split('-')
+                    col1, col2 = st.columns([1, 4])
+                    with col1:
+                        st.markdown(f"**#{i+1}**")
+                    with col2:
+                        icon_cols = st.columns(len(units) + 1)
+                        for j, unit in enumerate(units):
+                            with icon_cols[j]:
+                                icon = get_unit_icon(unit.strip())
+                                if icon:
+                                    st.image(icon, caption=unit.strip(), width=36)
+                                else:
+                                    st.text(unit.strip())
+                        with icon_cols[-1]:
+                            st.markdown(f"**{count}**")
+                
             else:
                 st.info("No data available for four-unit combinations")
                 
@@ -522,14 +627,20 @@ if st.session_state.data_loaded:
                 unit_counter = Counter(all_units)
                 top_units = dict(unit_counter.most_common(15))
                 
-                fig = px.bar(
-                    x=list(top_units.values()),
-                    y=list(top_units.keys()),
-                    orientation='h',
-                    title='Top 15 Most Frequently Built Units',
-                    labels={'x': 'Frequency', 'y': 'Units'}
-                )
-                st.plotly_chart(fig, use_container_width=True)
+                # Create a custom visualization with icons
+                st.markdown("**Top 15 Most Frequently Built Units**")
+                for i, (unit, count) in enumerate(top_units.items()):
+                    col1, col2, col3 = st.columns([1, 3, 1])
+                    with col1:
+                        st.markdown(f"**#{i+1}**")
+                    with col2:
+                        icon = get_unit_icon(unit)
+                        if icon:
+                            st.image(icon, caption=unit, width=36)
+                        else:
+                            st.text(unit)
+                    with col3:
+                        st.markdown(f"**{count}**")
             else:
                 st.info("No data available for unit compositions")
         
@@ -608,7 +719,44 @@ if st.session_state.data_loaded:
     
     with tab5:
         st.markdown('<h2 class="section-header">Raw Data</h2>', unsafe_allow_html=True)
-        st.dataframe(st.session_state.filtered_df)
+        
+        # Add unit icons to the dataframe for display
+        display_df = st.session_state.filtered_df.copy()
+        
+        # Function to add unit icons to a column
+        def add_unit_icons_to_column(df, column_name):
+            def format_units(unit_str):
+                if pd.isna(unit_str):
+                    return ""
+                units = unit_str.split('-')
+                icon_html = ""
+                for unit in units:
+                    icon = get_unit_icon(unit.strip())
+                    if icon:
+                        # Convert icon to base64 for HTML display
+                        buffered = io.BytesIO()
+                        icon.save(buffered, format="PNG")
+                        img_str = base64.b64encode(buffered.getvalue()).decode()
+                        icon_html += f'<img src="data:image/png;base64,{img_str}" class="unit-icon" title="{unit.strip()}">'
+                    else:
+                        icon_html += f'<span>{unit.strip()}</span>'
+                return icon_html
+            
+            df[column_name] = df[column_name].apply(format_units)
+            return df
+        
+        # Apply icon formatting to unit columns
+        try:
+            import base64
+            display_df = add_unit_icons_to_column(display_df, 'units_2')
+            display_df = add_unit_icons_to_column(display_df, 'units_3')
+            display_df = add_unit_icons_to_column(display_df, 'units_4')
+            
+            # Display the dataframe with HTML formatting
+            st.write(display_df.to_html(escape=False), unsafe_allow_html=True)
+        except Exception as e:
+            st.error(f"Error displaying data with icons: {e}")
+            st.dataframe(display_df)
 
 else:
     st.info("👈 Please upload a CSV file to begin analysis or place a 'default.csv' file in the same directory.")

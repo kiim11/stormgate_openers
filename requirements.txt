@@ -8,3 +8,5 @@ datetime
 timedelta
 extra_streamlit_components
 streamlit-local-storage
+requests
+Pillow
