@@ -750,6 +750,11 @@ if st.session_state.data_loaded:
                             icon_html += f'<img src="data:image/png;base64,{icon_base64}" class="unit-icon" title="{unit_name}">'
                         else:
                             icon_html += f'<span title="{unit_name}">{unit_id.strip()}</span>'
+                    
+                    # Add empty blocks for alignment (4 total slots - 2 used = 2 empty)
+                    for _ in range(2 - len(unit_ids)):
+                        icon_html += '<div class="unit-icon" style="visibility: hidden;"></div>'
+                    
                     icon_html += f'<span class="structure-count">{count}</span></div>'
                     
                     st.markdown(icon_html, unsafe_allow_html=True)
@@ -781,6 +786,11 @@ if st.session_state.data_loaded:
                             icon_html += f'<img src="data:image/png;base64,{icon_base64}" class="unit-icon" title="{unit_name}">'
                         else:
                             icon_html += f'<span title="{unit_name}">{unit_id.strip()}</span>'
+                    
+                    # Add empty blocks for alignment (4 total slots - 3 used = 1 empty)
+                    for _ in range(4 - len(unit_ids)):
+                        icon_html += '<div class="unit-icon" style="visibility: hidden;"></div>'
+                    
                     icon_html += f'<span class="structure-count">{count}</span></div>'
                     
                     st.markdown(icon_html, unsafe_allow_html=True)
@@ -814,6 +824,9 @@ if st.session_state.data_loaded:
                             icon_html += f'<img src="data:image/png;base64,{icon_base64}" class="unit-icon" title="{unit_name}">'
                         else:
                             icon_html += f'<span title="{unit_name}">{unit_id.strip()}</span>'
+                    
+                    # Add empty blocks for alignment (4 total slots - 4 used = 0 empty)
+                    # This one doesn't need empty blocks since it uses all slots
                     icon_html += f'<span class="structure-count">{count}</span></div>'
                     
                     st.markdown(icon_html, unsafe_allow_html=True)
@@ -847,6 +860,11 @@ if st.session_state.data_loaded:
                         icon_html += f'<img src="data:image/png;base64,{icon_base64}" class="unit-icon" title="{unit_name}">'
                     else:
                         icon_html += f'<span title="{unit_name}">{unit_id}</span>'
+                    
+                    # Add empty blocks for alignment (4 total slots - 1 used = 3 empty)
+                    for _ in range(3):
+                        icon_html += '<div class="unit-icon" style="visibility: hidden;"></div>'
+                    
                     icon_html += f'<span class="structure-count">{count}</span></div>'
                     
                     st.markdown(icon_html, unsafe_allow_html=True)
@@ -912,7 +930,6 @@ if st.session_state.data_loaded:
             st.plotly_chart(fig, use_container_width=True)
         else:
             st.info(f"Not enough data to display win rates for {unit_option.lower()}")
-    
     with tab4:
         st.markdown('<h2 class="section-header">Map Analysis</h2>', unsafe_allow_html=True)
         
