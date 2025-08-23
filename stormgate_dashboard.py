@@ -4,6 +4,8 @@ import plotly.express as px
 from collections import Counter
 import numpy as np
 import os
+import json
+from streamlit_local_storage import LocalStorage
 
 # Set page configuration
 st.set_page_config(
@@ -12,6 +14,9 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+# Initialize local storage
+local_storage = LocalStorage()
 
 # Custom CSS
 st.markdown("""
@@ -32,17 +37,39 @@ st.markdown("""
         border-radius: 10px;
         margin-bottom: 20px;
     }
+    .storage-notification {
+        background-color: #4A90E2;
+        color: white;
+        padding: 10px;
+        border-radius: 5px;
+        margin-bottom: 15px;
+        text-align: center;
+    }
 </style>
 """, unsafe_allow_html=True)
 
 # Initialize session state for filter persistence
 if 'filters' not in st.session_state:
-    st.session_state.filters = {
-        'races': [],
-        'opponents': [],
-        'leagues': [],
-        'opponent_leagues': []
-    }
+    # Try to load filters from local storage
+    saved_filters = local_storage.getItem("stormgate_filters")
+    if saved_filters and saved_filters.value:
+        try:
+            st.session_state.filters = json.loads(saved_filters.value)
+            st.sidebar.markdown('<div class="storage-notification">Loaded saved filters from storage!</div>', unsafe_allow_html=True)
+        except:
+            st.session_state.filters = {
+                'races': [],
+                'opponents': [],
+                'leagues': [],
+                'opponent_leagues': []
+            }
+    else:
+        st.session_state.filters = {
+            'races': [],
+            'opponents': [],
+            'leagues': [],
+            'opponent_leagues': []
+        }
 
 if 'data_loaded' not in st.session_state:
     st.session_state.data_loaded = False
@@ -52,6 +79,10 @@ if 'df' not in st.session_state:
 
 if 'filtered_df' not in st.session_state:
     st.session_state.filtered_df = None
+
+# Function to save filters to local storage
+def save_filters_to_storage():
+    local_storage.setItem("stormgate_filters", json.dumps(st.session_state.filters))
 
 # Title and description
 st.markdown('<h1 class="main-header">🎮 Stormgate Strategy Analyzer</h1>', unsafe_allow_html=True)
@@ -90,6 +121,9 @@ if os.path.exists(default_csv_path) and not st.session_state.data_loaded:
         if not st.session_state.filters['opponent_leagues']:
             st.session_state.filters['opponent_leagues'] = list(st.session_state.df['opponent_league_before'].unique())
             
+        # Save to local storage
+        save_filters_to_storage()
+            
     except Exception as e:
         st.sidebar.error(f"Error loading default.csv: {e}")
 
@@ -108,6 +142,9 @@ if uploaded_file is not None:
         st.session_state.filters['leagues'] = list(st.session_state.df['league_before'].unique())
         st.session_state.filters['opponent_leagues'] = list(st.session_state.df['opponent_league_before'].unique())
         
+        # Save to local storage
+        save_filters_to_storage()
+        
     except Exception as e:
         st.sidebar.error(f"Error loading uploaded file: {e}")
 
@@ -115,12 +152,22 @@ if uploaded_file is not None:
 if st.session_state.data_loaded:
     st.sidebar.markdown("### Filters")
     
-    # Reset filters button
-    if st.sidebar.button("🔄 Reset Filters to Default"):
+    # Clear filters button
+    if st.sidebar.button("🗑️ Clear All Filters"):
+        st.session_state.filters['races'] = []
+        st.session_state.filters['opponents'] = []
+        st.session_state.filters['leagues'] = []
+        st.session_state.filters['opponent_leagues'] = []
+        save_filters_to_storage()
+        st.sidebar.success("Filters cleared!")
+    
+    # Reset to default button
+    if st.sidebar.button("🔄 Reset to Default Filters"):
         st.session_state.filters['races'] = list(st.session_state.df['race'].unique())
         st.session_state.filters['opponents'] = list(st.session_state.df['opponent_race'].unique())
         st.session_state.filters['leagues'] = list(st.session_state.df['league_before'].unique())
         st.session_state.filters['opponent_leagues'] = list(st.session_state.df['opponent_league_before'].unique())
+        save_filters_to_storage()
         st.sidebar.success("Filters reset to default!")
     
     st.sidebar.markdown("---")
@@ -130,7 +177,8 @@ if st.session_state.data_loaded:
         "Select Races",
         options=st.session_state.df['race'].unique(),
         default=st.session_state.filters['races'],
-        key="races_filter"
+        key="races_filter",
+        on_change=save_filters_to_storage
     )
     
     # Update session state
@@ -141,7 +189,8 @@ if st.session_state.data_loaded:
         "Select Opponent Races",
         options=st.session_state.df['opponent_race'].unique(),
         default=st.session_state.filters['opponents'],
-        key="opponents_filter"
+        key="opponents_filter",
+        on_change=save_filters_to_storage
     )
     
     # Update session state
@@ -152,7 +201,8 @@ if st.session_state.data_loaded:
         "Select Leagues",
         options=st.session_state.df['league_before'].unique(),
         default=st.session_state.filters['leagues'],
-        key="leagues_filter"
+        key="leagues_filter",
+        on_change=save_filters_to_storage
     )
     
     # Update session state
@@ -163,7 +213,8 @@ if st.session_state.data_loaded:
         "Select Opponent Leagues",
         options=st.session_state.df['opponent_league_before'].unique(),
         default=st.session_state.filters['opponent_leagues'],
-        key="opponent_leagues_filter"
+        key="opponent_leagues_filter",
+        on_change=save_filters_to_storage
     )
     
     # Update session state
@@ -551,7 +602,7 @@ else:
     1. Run the scraping script to collect Stormgate data
     2. Save the CSV as 'default.csv' in the same directory or upload it using the sidebar
     3. Use the filters to select specific races, opponents, and leagues
-    4. Your filter selections will be automatically saved during your session
+    4. Your filter selections will be automatically saved in browser storage
     5. Explore the different tabs to analyze various aspects of the data
     
     ### What you can analyze:
@@ -561,9 +612,10 @@ else:
     - **Map Analysis**: Understand map preferences and performance on different maps
     
     ### Filter Persistence:
-    - Your filter selections are automatically saved in session state
-    - They will be remembered as you interact with the app during your session
-    - Use the "Reset Filters to Default" button to restore all selections
+    - Your filter selections are automatically saved in browser local storage
+    - They will be restored when you revisit the page, even after closing the browser
+    - Use the "Clear All Filters" button to reset all selections
+    - Use the "Reset to Default Filters" button to select all options
     """)
 
 # Footer
