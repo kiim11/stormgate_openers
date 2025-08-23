@@ -132,7 +132,7 @@ if os.path.exists(default_csv_path) and not st.session_state.data_loaded:
             st.session_state.filters['opponent_leagues'] = list(st.session_state.df['opponent_league_before'].unique())
             
         # Save to cookies
-        save_filters_to_cookie()
+        # save_filters_to_cookie()
             
     except Exception as e:
         st.sidebar.error(f"Error loading default.csv: {e}")
@@ -153,7 +153,7 @@ if uploaded_file is not None:
         st.session_state.filters['opponent_leagues'] = list(st.session_state.df['opponent_league_before'].unique())
         
         # Save to cookies
-        save_filters_to_cookie()
+        # save_filters_to_cookie()
         
     except Exception as e:
         st.sidebar.error(f"Error loading uploaded file: {e}")
