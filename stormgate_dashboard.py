@@ -52,10 +52,10 @@ st.markdown("""
 if 'filters' not in st.session_state:
     # Try to load filters from local storage
     saved_filters = local_storage.getItem("stormgate_filters")
-    if saved_filters:
+    if saved_filters and saved_filters.value:
         try:
-            st.session_state.filters = json.loads(saved_filters)
-            st.sidebar.markdown('<div class="storage-notification">Loaded saved filters from storage!</div>', unsafe_allow_html=True)
+            st.session_state.filters = json.loads(saved_filters.value)
+            st.session_state.filters_loaded = True
         except:
             st.session_state.filters = {
                 'races': [],
@@ -63,6 +63,7 @@ if 'filters' not in st.session_state:
                 'leagues': [],
                 'opponent_leagues': []
             }
+            st.session_state.filters_loaded = False
     else:
         st.session_state.filters = {
             'races': [],
@@ -70,6 +71,7 @@ if 'filters' not in st.session_state:
             'leagues': [],
             'opponent_leagues': []
         }
+        st.session_state.filters_loaded = False
 
 if 'data_loaded' not in st.session_state:
     st.session_state.data_loaded = False
@@ -112,14 +114,12 @@ if os.path.exists(default_csv_path) and not st.session_state.data_loaded:
         st.sidebar.success("📊 Loaded default.csv automatically")
         
         # Initialize filters with all options if not already set
-        if not st.session_state.filters['races']:
+        if not st.session_state.filters_loaded:
             st.session_state.filters['races'] = list(st.session_state.df['race'].unique())
-        if not st.session_state.filters['opponents']:
             st.session_state.filters['opponents'] = list(st.session_state.df['opponent_race'].unique())
-        if not st.session_state.filters['leagues']:
             st.session_state.filters['leagues'] = list(st.session_state.df['league_before'].unique())
-        if not st.session_state.filters['opponent_leagues']:
             st.session_state.filters['opponent_leagues'] = list(st.session_state.df['opponent_league_before'].unique())
+            st.session_state.filters_loaded = True
             
         # Save to local storage
         save_filters_to_storage()
@@ -150,6 +150,10 @@ if uploaded_file is not None:
 
 # Filter section with persistence
 if st.session_state.data_loaded:
+    if not st.session_state.filters_loaded:
+        st.sidebar.markdown('<div class="storage-notification">Loaded saved filters from storage!</div>', unsafe_allow_html=True)
+        st.session_state.filters_loaded = True
+    
     st.sidebar.markdown("### Filters")
     
     # Clear filters button
@@ -160,6 +164,7 @@ if st.session_state.data_loaded:
         st.session_state.filters['opponent_leagues'] = []
         save_filters_to_storage()
         st.sidebar.success("Filters cleared!")
+        st.experimental_rerun()
     
     # Reset to default button
     if st.sidebar.button("🔄 Reset to Default Filters"):
@@ -169,8 +174,30 @@ if st.session_state.data_loaded:
         st.session_state.filters['opponent_leagues'] = list(st.session_state.df['opponent_league_before'].unique())
         save_filters_to_storage()
         st.sidebar.success("Filters reset to default!")
+        st.experimental_rerun()
     
     st.sidebar.markdown("---")
+    
+    # Create callback functions for filter changes
+    def update_races():
+        st.session_state.filters['races'] = st.session_state.races_filter
+        save_filters_to_storage()
+        st.experimental_rerun()
+        
+    def update_opponents():
+        st.session_state.filters['opponents'] = st.session_state.opponents_filter
+        save_filters_to_storage()
+        st.experimental_rerun()
+        
+    def update_leagues():
+        st.session_state.filters['leagues'] = st.session_state.leagues_filter
+        save_filters_to_storage()
+        st.experimental_rerun()
+        
+    def update_opponent_leagues():
+        st.session_state.filters['opponent_leagues'] = st.session_state.opponent_leagues_filter
+        save_filters_to_storage()
+        st.experimental_rerun()
     
     # Race filter
     selected_races = st.sidebar.multiselect(
@@ -178,11 +205,8 @@ if st.session_state.data_loaded:
         options=st.session_state.df['race'].unique(),
         default=st.session_state.filters['races'],
         key="races_filter",
-        on_change=save_filters_to_storage
+        on_change=update_races
     )
-    
-    # Update session state
-    st.session_state.filters['races'] = selected_races
     
     # Opponent race filter
     selected_opponents = st.sidebar.multiselect(
@@ -190,11 +214,8 @@ if st.session_state.data_loaded:
         options=st.session_state.df['opponent_race'].unique(),
         default=st.session_state.filters['opponents'],
         key="opponents_filter",
-        on_change=save_filters_to_storage
+        on_change=update_opponents
     )
-    
-    # Update session state
-    st.session_state.filters['opponents'] = selected_opponents
     
     # League filter
     selected_leagues = st.sidebar.multiselect(
@@ -202,11 +223,8 @@ if st.session_state.data_loaded:
         options=st.session_state.df['league_before'].unique(),
         default=st.session_state.filters['leagues'],
         key="leagues_filter",
-        on_change=save_filters_to_storage
+        on_change=update_leagues
     )
-    
-    # Update session state
-    st.session_state.filters['leagues'] = selected_leagues
     
     # Opponent league filter
     selected_opponent_leagues = st.sidebar.multiselect(
@@ -214,18 +232,15 @@ if st.session_state.data_loaded:
         options=st.session_state.df['opponent_league_before'].unique(),
         default=st.session_state.filters['opponent_leagues'],
         key="opponent_leagues_filter",
-        on_change=save_filters_to_storage
+        on_change=update_opponent_leagues
     )
-    
-    # Update session state
-    st.session_state.filters['opponent_leagues'] = selected_opponent_leagues
     
     # Filter data based on selections
     st.session_state.filtered_df = st.session_state.df[
-        (st.session_state.df['race'].isin(selected_races)) &
-        (st.session_state.df['opponent_race'].isin(selected_opponents)) &
-        (st.session_state.df['league_before'].isin(selected_leagues)) &
-        (st.session_state.df['opponent_league_before'].isin(selected_opponent_leagues))
+        (st.session_state.df['race'].isin(st.session_state.filters['races'])) &
+        (st.session_state.df['opponent_race'].isin(st.session_state.filters['opponents'])) &
+        (st.session_state.df['league_before'].isin(st.session_state.filters['leagues'])) &
+        (st.session_state.df['opponent_league_before'].isin(st.session_state.filters['opponent_leagues']))
     ]
     
     # Display data source info
