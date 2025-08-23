@@ -474,7 +474,7 @@ if st.session_state.data_loaded:
         with col4:
             # First 6 structures
             structure_6_counts = st.session_state.filtered_df['first_6_structures'].value_counts().head(10)
-           极速 if len(structure_6_counts) > 0:
+            if len(structure_6_counts) > 0:
                 fig = px.bar(
                     x=structure_6_counts.values,
                     y=structure_6_counts.index,
