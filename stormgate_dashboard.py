@@ -52,9 +52,9 @@ st.markdown("""
 if 'filters' not in st.session_state:
     # Try to load filters from local storage
     saved_filters = local_storage.getItem("stormgate_filters")
-    if saved_filters and saved_filters.value:
+    if saved_filters:
         try:
-            st.session_state.filters = json.loads(saved_filters.value)
+            st.session_state.filters = json.loads(saved_filters)
             st.sidebar.markdown('<div class="storage-notification">Loaded saved filters from storage!</div>', unsafe_allow_html=True)
         except:
             st.session_state.filters = {
