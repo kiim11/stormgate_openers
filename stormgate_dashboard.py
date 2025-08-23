@@ -9,6 +9,7 @@ from streamlit_local_storage import LocalStorage
 import requests
 from PIL import Image
 import io
+import re
 
 # Set page configuration
 st.set_page_config(
@@ -103,7 +104,8 @@ def load_units_data():
     try:
         with open('units.json', 'r') as f:
             units_data = json.load(f)
-        return {unit['name']: unit for unit in units_data if 'button_icon_path' in unit}
+        # Create a mapping from ID to unit data
+        return {unit['id']: unit for unit in units_data if 'button_icon_path' in unit}
     except FileNotFoundError:
         st.error("units.json file not found. Please make sure it's in the same directory.")
         return {}
@@ -116,7 +118,8 @@ def load_upgrades_data():
     try:
         with open('upgrades.json', 'r') as f:
             upgrades_data = json.load(f)
-        return {upgrade['name']: upgrade for upgrade in upgrades_data if 'button_icon_path' in upgrade}
+        # Create a mapping from ID to upgrade data
+        return {upgrade['id']: upgrade for upgrade in upgrades_data if 'button_icon_path' in upgrade}
     except FileNotFoundError:
         st.error("upgrades.json file not found. Please make sure it's in the same directory.")
         return {}
@@ -128,11 +131,11 @@ def load_upgrades_data():
 units_data = load_units_data()
 upgrades_data = load_upgrades_data()
 
-# Function to get unit icon
+# Function to get unit icon by ID
 @st.cache_data
-def get_unit_icon(unit_name):
-    if unit_name in units_data:
-        icon_path = units_data[unit_name]['button_icon_path']
+def get_unit_icon(unit_id):
+    if unit_id in units_data:
+        icon_path = units_data[unit_id]['button_icon_path']
         if icon_path:
             try:
                 response = requests.get(f"https://stormgatejson.untapped.gg/art/{icon_path}")
@@ -141,14 +144,14 @@ def get_unit_icon(unit_name):
                     image = image.resize((36, 36))
                     return image
             except Exception as e:
-                st.error(f"Error loading icon for {unit_name}: {e}")
+                st.error(f"Error loading icon for {unit_id}: {e}")
     return None
 
-# Function to get upgrade icon
+# Function to get upgrade icon by ID
 @st.cache_data
-def get_upgrade_icon(upgrade_name):
-    if upgrade_name in upgrades_data:
-        icon_path = upgrades_data[upgrade_name]['button_icon_path']
+def get_upgrade_icon(upgrade_id):
+    if upgrade_id in upgrades_data:
+        icon_path = upgrades_data[upgrade_id]['button_icon_path']
         if icon_path:
             try:
                 response = requests.get(f"https://stormgatejson.untapped.gg/art/{icon_path}")
@@ -157,8 +160,18 @@ def get_upgrade_icon(upgrade_name):
                     image = image.resize((36, 36))
                     return image
             except Exception as e:
-                st.error(f"Error loading icon for {upgrade_name}: {e}")
+                st.error(f"Error loading icon for {upgrade_id}: {e}")
     return None
+
+# Function to extract IDs from composition strings
+def extract_ids_from_composition(comp_str):
+    if pd.isna(comp_str):
+        return []
+    
+    # Pattern to match IDs with optional counts in parentheses
+    pattern = r'([A-Za-z0-9_]+)(?:\([^)]*\))?'
+    matches = re.findall(pattern, comp_str)
+    return matches
 
 # Function to save filters to local storage
 def save_filters_to_storage():
@@ -372,7 +385,7 @@ if st.session_state.data_loaded:
         
         with col2:
             # Win rate by league
-            league_win_rate = st.session_state.filtered_df.groupby('league_before')['win'].agg(['mean','count']).reset_index()
+            league_win_rate = st.session_state.filtered_df.groupby('league_before')['win'].agg(['mean', 'count']).reset_index()
             league_win_rate['win_percentage'] = league_win_rate['mean'] * 100
             league_win_rate = league_win_rate[league_win_rate['count'] >= 5]  # Only show leagues with enough data
             
@@ -536,19 +549,19 @@ if st.session_state.data_loaded:
                 # Create a custom visualization with icons
                 st.markdown("**Top 10 Two-Unit Combinations**")
                 for i, (unit_combo, count) in enumerate(top_unit_2.items()):
-                    units = unit_combo.split('-')
+                    unit_ids = extract_ids_from_composition(unit_combo)
                     col1, col2 = st.columns([1, 4])
                     with col1:
                         st.markdown(f"**#{i+1}**")
                     with col2:
-                        icon_cols = st.columns(len(units) + 1)
-                        for j, unit in enumerate(units):
+                        icon_cols = st.columns(len(unit_ids) + 1)
+                        for j, unit_id in enumerate(unit_ids):
                             with icon_cols[j]:
-                                icon = get_unit_icon(unit.strip())
+                                icon = get_unit_icon(unit_id.strip())
                                 if icon:
-                                    st.image(icon, caption=unit.strip(), width=36)
+                                    st.image(icon, caption=unit_id.strip(), width=36)
                                 else:
-                                    st.text(unit.strip())
+                                    st.text(unit_id.strip())
                         with icon_cols[-1]:
                             st.markdown(f"**{count}**")
                 
@@ -565,19 +578,19 @@ if st.session_state.data_loaded:
                 # Create a custom visualization with icons
                 st.markdown("**Top 10 Three-Unit Combinations**")
                 for i, (unit_combo, count) in enumerate(top_unit_3.items()):
-                    units = unit_combo.split('-')
+                    unit_ids = extract_ids_from_composition(unit_combo)
                     col1, col2 = st.columns([1, 4])
                     with col1:
                         st.markdown(f"**#{i+1}**")
                     with col2:
-                        icon_cols = st.columns(len(units) + 1)
-                        for j, unit in enumerate(units):
+                        icon_cols = st.columns(len(unit_ids) + 1)
+                        for j, unit_id in enumerate(unit_ids):
                             with icon_cols[j]:
-                                icon = get_unit_icon(unit.strip())
+                                icon = get_unit_icon(unit_id.strip())
                                 if icon:
-                                    st.image(icon, caption=unit.strip(), width=36)
+                                    st.image(icon, caption=unit_id.strip(), width=36)
                                 else:
-                                    st.text(unit.strip())
+                                    st.text(unit_id.strip())
                         with icon_cols[-1]:
                             st.markdown(f"**{count}**")
                 
@@ -596,19 +609,19 @@ if st.session_state.data_loaded:
                 # Create a custom visualization with icons
                 st.markdown("**Top 10 Four-Unit Combinations**")
                 for i, (unit_combo, count) in enumerate(top_unit_4.items()):
-                    units = unit_combo.split('-')
+                    unit_ids = extract_ids_from_composition(unit_combo)
                     col1, col2 = st.columns([1, 4])
                     with col1:
                         st.markdown(f"**#{i+1}**")
                     with col2:
-                        icon_cols = st.columns(len(units) + 1)
-                        for j, unit in enumerate(units):
+                        icon_cols = st.columns(len(unit_ids) + 1)
+                        for j, unit_id in enumerate(unit_ids):
                             with icon_cols[j]:
-                                icon = get_unit_icon(unit.strip())
+                                icon = get_unit_icon(unit_id.strip())
                                 if icon:
-                                    st.image(icon, caption=unit.strip(), width=36)
+                                    st.image(icon, caption=unit_id.strip(), width=36)
                                 else:
-                                    st.text(unit.strip())
+                                    st.text(unit_id.strip())
                         with icon_cols[-1]:
                             st.markdown(f"**{count}**")
                 
@@ -617,28 +630,27 @@ if st.session_state.data_loaded:
                 
         with col4:
             # Get top unit compositions (all units)
-            all_units = []
+            all_unit_ids = []
             for comp_str in st.session_state.filtered_df['units_comp'].dropna():
-                # Split by '-' and extract unit names (ignoring counts in parentheses)
-                units = [unit.split('(')[0].strip() for unit in comp_str.split('-')]
-                all_units.extend(units)
+                unit_ids = extract_ids_from_composition(comp_str)
+                all_unit_ids.extend(unit_ids)
             
-            if all_units:
-                unit_counter = Counter(all_units)
+            if all_unit_ids:
+                unit_counter = Counter(all_unit_ids)
                 top_units = dict(unit_counter.most_common(15))
                 
                 # Create a custom visualization with icons
                 st.markdown("**Top 15 Most Frequently Built Units**")
-                for i, (unit, count) in enumerate(top_units.items()):
+                for i, (unit_id, count) in enumerate(top_units.items()):
                     col1, col2, col3 = st.columns([1, 3, 1])
                     with col1:
                         st.markdown(f"**#{i+1}**")
                     with col2:
-                        icon = get_unit_icon(unit)
+                        icon = get_unit_icon(unit_id)
                         if icon:
-                            st.image(icon, caption=unit, width=36)
+                            st.image(icon, caption=unit_id, width=36)
                         else:
-                            st.text(unit)
+                            st.text(unit_id)
                     with col3:
                         st.markdown(f"**{count}**")
             else:
@@ -719,44 +731,7 @@ if st.session_state.data_loaded:
     
     with tab5:
         st.markdown('<h2 class="section-header">Raw Data</h2>', unsafe_allow_html=True)
-        
-        # Add unit icons to the dataframe for display
-        display_df = st.session_state.filtered_df.copy()
-        
-        # Function to add unit icons to a column
-        def add_unit_icons_to_column(df, column_name):
-            def format_units(unit_str):
-                if pd.isna(unit_str):
-                    return ""
-                units = unit_str.split('-')
-                icon_html = ""
-                for unit in units:
-                    icon = get_unit_icon(unit.strip())
-                    if icon:
-                        # Convert icon to base64 for HTML display
-                        buffered = io.BytesIO()
-                        icon.save(buffered, format="PNG")
-                        img_str = base64.b64encode(buffered.getvalue()).decode()
-                        icon_html += f'<img src="data:image/png;base64,{img_str}" class="unit-icon" title="{unit.strip()}">'
-                    else:
-                        icon_html += f'<span>{unit.strip()}</span>'
-                return icon_html
-            
-            df[column_name] = df[column_name].apply(format_units)
-            return df
-        
-        # Apply icon formatting to unit columns
-        try:
-            import base64
-            display_df = add_unit_icons_to_column(display_df, 'units_2')
-            display_df = add_unit_icons_to_column(display_df, 'units_3')
-            display_df = add_unit_icons_to_column(display_df, 'units_4')
-            
-            # Display the dataframe with HTML formatting
-            st.write(display_df.to_html(escape=False), unsafe_allow_html=True)
-        except Exception as e:
-            st.error(f"Error displaying data with icons: {e}")
-            st.dataframe(display_df)
+        st.dataframe(st.session_state.filtered_df)
 
 else:
     st.info("👈 Please upload a CSV file to begin analysis or place a 'default.csv' file in the same directory.")
