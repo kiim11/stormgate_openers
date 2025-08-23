@@ -126,6 +126,10 @@ if 'df' not in st.session_state:
 
 if 'filtered_df' not in st.session_state:
     st.session_state.filtered_df = None
+    
+# Add to your session state initialization
+if 'callback_lock' not in st.session_state:
+    st.session_state.callback_lock = False
 
 # Load units and upgrades data
 @st.cache_data
@@ -378,21 +382,45 @@ if st.session_state.data_loaded:
     st.sidebar.markdown("---")
     
     # Create callback functions for filter changes
-    def update_races():
-        st.session_state.filters['races'] = st.session_state.races_filter
-        save_filters_to_storage()
-        
     def update_opponents():
-        st.session_state.filters['opponents'] = st.session_state.opponents_filter
-        save_filters_to_storage()
-        
+        if st.session_state.callback_lock:
+            return
+        st.session_state.callback_lock = True
+        try:
+            st.session_state.filters['opponents'] = st.session_state.opponents_filter
+            save_filters_to_storage()
+        finally:
+            st.session_state.callback_lock = False
+
+    def update_races():
+        if st.session_state.callback_lock:
+            return
+        st.session_state.callback_lock = True
+        try:
+            st.session_state.filters['races'] = st.session_state.races_filter
+            save_filters_to_storage()
+        finally:
+            st.session_state.callback_lock = False
+
     def update_leagues():
-        st.session_state.filters['leagues'] = st.session_state.leagues_filter
-        save_filters_to_storage()
-        
+        if st.session_state.callback_lock:
+            return
+        st.session_state.callback_lock = True
+        try:
+            st.session_state.filters['leagues'] = st.session_state.leagues_filter
+            save_filters_to_storage()
+        finally:
+            st.session_state.callback_lock = False
+
     def update_opponent_leagues():
-        st.session_state.filters['opponent_leagues'] = st.session_state.opponent_leagues_filter
-        save_filters_to_storage()
+        if st.session_state.callback_lock:
+            return
+        st.session_state.callback_lock = True
+        try:
+            st.session_state.filters['opponent_leagues'] = st.session_state.opponent_leagues_filter
+            save_filters_to_storage()
+        finally:
+            st.session_state.callback_lock = False
     
     # Race filter
     selected_races = st.sidebar.multiselect(
