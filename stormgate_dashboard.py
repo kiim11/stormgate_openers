@@ -182,22 +182,22 @@ if st.session_state.data_loaded:
     def update_races():
         st.session_state.filters['races'] = st.session_state.races_filter
         save_filters_to_storage()
-        st.experimental_rerun()
+        #st.experimental_rerun()
         
     def update_opponents():
         st.session_state.filters['opponents'] = st.session_state.opponents_filter
         save_filters_to_storage()
-        st.experimental_rerun()
+        #st.experimental_rerun()
         
     def update_leagues():
         st.session_state.filters['leagues'] = st.session_state.leagues_filter
         save_filters_to_storage()
-        st.experimental_rerun()
+       # st.experimental_rerun()
         
     def update_opponent_leagues():
         st.session_state.filters['opponent_leagues'] = st.session_state.opponent_leagues_filter
         save_filters_to_storage()
-        st.experimental_rerun()
+        #st.experimental_rerun()
     
     # Race filter
     selected_races = st.sidebar.multiselect(
