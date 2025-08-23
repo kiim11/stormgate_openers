@@ -4,9 +4,6 @@ import plotly.express as px
 from collections import Counter
 import numpy as np
 import os
-import json
-from datetime import datetime, timedelta
-import extra_streamlit_components as stx
 
 # Set page configuration
 st.set_page_config(
@@ -35,47 +32,17 @@ st.markdown("""
         border-radius: 10px;
         margin-bottom: 20px;
     }
-    .cookie-notification {
-        background-color: #4A90E2;
-        color: white;
-        padding: 10px;
-        border-radius: 5px;
-        margin-bottom: 15px;
-        text-align: center;
-        display: none;
-    }
 </style>
 """, unsafe_allow_html=True)
 
-# Initialize cookie manager
-#@st.cache_resource
-def get_cookie_manager():
-    return stx.CookieManager()
-
-cookie_manager = get_cookie_manager()
-
 # Initialize session state for filter persistence
 if 'filters' not in st.session_state:
-    # Try to load filters from cookies
-    cookies = cookie_manager.get_all()
-    if 'stormgate_filters' in cookies:
-        try:
-            st.session_state.filters = json.loads(cookies['stormgate_filters'])
-            st.success("Loaded saved filters from cookies!")
-        except:
-            st.session_state.filters = {
-                'races': [],
-                'opponents': [],
-                'leagues': [],
-                'opponent_leagues': []
-            }
-    else:
-        st.session_state.filters = {
-            'races': [],
-            'opponents': [],
-            'leagues': [],
-            'opponent_leagues': []
-        }
+    st.session_state.filters = {
+        'races': [],
+        'opponents': [],
+        'leagues': [],
+        'opponent_leagues': []
+    }
 
 if 'data_loaded' not in st.session_state:
     st.session_state.data_loaded = False
@@ -86,20 +53,12 @@ if 'df' not in st.session_state:
 if 'filtered_df' not in st.session_state:
     st.session_state.filtered_df = None
 
-# Function to save filters to cookies
-def save_filters_to_cookie():
-    cookie_manager.set(
-        'stormgate_filters', 
-        json.dumps(st.session_state.filters),
-        expires_at=datetime.now() + timedelta(days=30)
-    )
-
 # Title and description
 st.markdown('<h1 class="main-header">🎮 Stormgate Strategy Analyzer</h1>', unsafe_allow_html=True)
 st.markdown("Analyze opening strategies, unit compositions, and win rates across different match-ups and leagues.")
 
 # Load data function with caching
-#@st.cache_data
+@st.cache_data
 def load_data(file_path):
     df = pd.read_csv(file_path)
     
@@ -131,9 +90,6 @@ if os.path.exists(default_csv_path) and not st.session_state.data_loaded:
         if not st.session_state.filters['opponent_leagues']:
             st.session_state.filters['opponent_leagues'] = list(st.session_state.df['opponent_league_before'].unique())
             
-        # Save to cookies
-        # save_filters_to_cookie()
-            
     except Exception as e:
         st.sidebar.error(f"Error loading default.csv: {e}")
 
@@ -152,9 +108,6 @@ if uploaded_file is not None:
         st.session_state.filters['leagues'] = list(st.session_state.df['league_before'].unique())
         st.session_state.filters['opponent_leagues'] = list(st.session_state.df['opponent_league_before'].unique())
         
-        # Save to cookies
-        # save_filters_to_cookie()
-        
     except Exception as e:
         st.sidebar.error(f"Error loading uploaded file: {e}")
 
@@ -162,14 +115,13 @@ if uploaded_file is not None:
 if st.session_state.data_loaded:
     st.sidebar.markdown("### Filters")
     
-    # Clear filters button
-    if st.sidebar.button("🗑️ Clear All Filters"):
-        st.session_state.filters['races'] = []
-        st.session_state.filters['opponents'] = []
-        st.session_state.filters['leagues'] = []
-        st.session_state.filters['opponent_leagues'] = []
-        save_filters_to_cookie()
-        st.sidebar.success("Filters cleared!")
+    # Reset filters button
+    if st.sidebar.button("🔄 Reset Filters to Default"):
+        st.session_state.filters['races'] = list(st.session_state.df['race'].unique())
+        st.session_state.filters['opponents'] = list(st.session_state.df['opponent_race'].unique())
+        st.session_state.filters['leagues'] = list(st.session_state.df['league_before'].unique())
+        st.session_state.filters['opponent_leagues'] = list(st.session_state.df['opponent_league_before'].unique())
+        st.sidebar.success("Filters reset to default!")
     
     st.sidebar.markdown("---")
     
@@ -178,7 +130,6 @@ if st.session_state.data_loaded:
         "Select Races",
         options=st.session_state.df['race'].unique(),
         default=st.session_state.filters['races'],
-        on_change=save_filters_to_cookie,
         key="races_filter"
     )
     
@@ -190,7 +141,6 @@ if st.session_state.data_loaded:
         "Select Opponent Races",
         options=st.session_state.df['opponent_race'].unique(),
         default=st.session_state.filters['opponents'],
-        on_change=save_filters_to_cookie,
         key="opponents_filter"
     )
     
@@ -202,7 +152,6 @@ if st.session_state.data_loaded:
         "Select Leagues",
         options=st.session_state.df['league_before'].unique(),
         default=st.session_state.filters['leagues'],
-        on_change=save_filters_to_cookie,
         key="leagues_filter"
     )
     
@@ -214,7 +163,6 @@ if st.session_state.data_loaded:
         "Select Opponent Leagues",
         options=st.session_state.df['opponent_league_before'].unique(),
         default=st.session_state.filters['opponent_leagues'],
-        on_change=save_filters_to_cookie,
         key="opponent_leagues_filter"
     )
     
@@ -603,7 +551,7 @@ else:
     1. Run the scraping script to collect Stormgate data
     2. Save the CSV as 'default.csv' in the same directory or upload it using the sidebar
     3. Use the filters to select specific races, opponents, and leagues
-    4. Your filter selections will be automatically saved via cookies
+    4. Your filter selections will be automatically saved during your session
     5. Explore the different tabs to analyze various aspects of the data
     
     ### What you can analyze:
@@ -613,9 +561,9 @@ else:
     - **Map Analysis**: Understand map preferences and performance on different maps
     
     ### Filter Persistence:
-    - Your filter selections are automatically saved in browser cookies
-    - They will be restored when you revisit the page
-    - Use the "Clear All Filters" button to reset all selections
+    - Your filter selections are automatically saved in session state
+    - They will be remembered as you interact with the app during your session
+    - Use the "Reset Filters to Default" button to restore all selections
     """)
 
 # Footer
