@@ -174,6 +174,18 @@ def get_unit_icon(unit_id):
                     return image
             except Exception as e:
                 st.error(f"Error loading icon for {unit_id}: {e}")
+                
+    if unit_id in upgrades_data and 'button_icon_path' in upgrades_data[unit_id]:
+        icon_path = upgrades_data[unit_id]['button_icon_path']
+        if icon_path:
+            try:
+                response = requests.get(f"https://stormgatejson.untapped.gg/art/{icon_path}")
+                if response.status_code == 200:
+                    image = Image.open(io.BytesIO(response.content))
+                    image = image.resize((36, 36))
+                    return image
+            except Exception as e:
+                st.error(f"Error loading icon for {unit_id}: {e}")
     return None
 
 # Function to get unit name by ID
@@ -192,6 +204,8 @@ def get_structure_icon(structure_id):
 def get_structure_name(structure_id):
     if structure_id in units_data and 'name' in units_data[structure_id]:
         return units_data[structure_id]['name']
+    if structure_id in upgrades_data and 'name' in upgrades_data[structure_id]:
+        return upgrades_data[structure_id]['name']
     return structure_id
 
 # Function to get upgrade icon by ID
