@@ -200,6 +200,15 @@ def get_structure_icon(structure_id):
     # Structures are also in units.json, so we can use the same function
     return get_unit_icon(structure_id)
 
+# Function to convert structure IDs to readable names
+def get_structure_combo_name(structure_combo):
+    structure_ids = extract_structure_ids(structure_combo)
+    structure_names = []
+    for structure_id in structure_ids:
+        structure_name = get_structure_name(structure_id)
+        structure_names.append(structure_name)
+    return " - ".join(structure_names)
+
 # Function to get structure name by ID
 def get_structure_name(structure_id):
     if structure_id in units_data and 'name' in units_data[structure_id]:
@@ -641,6 +650,7 @@ if st.session_state.data_loaded:
         opening_win_rates = st.session_state.filtered_df.groupby(structure_col)['win'].agg(['mean', 'count']).reset_index()
         opening_win_rates = opening_win_rates[opening_win_rates['count'] >= 5]  # Only openings with enough data
         opening_win_rates['win_percentage'] = opening_win_rates['mean'] * 100
+        opening_win_rates['combo_name'] = opening_win_rates[structure_col].apply(get_structure_combo_name)
         
         if len(opening_win_rates) > 0:
             fig = px.scatter(
@@ -648,7 +658,7 @@ if st.session_state.data_loaded:
                 x='count',
                 y='win_percentage',
                 size='count',
-                hover_name=structure_col,
+                hover_name='combo_name',
                 title=f'Win Rate vs. Popularity of Opening Strategies ({structure_option})',
                 labels={'count': 'Number of Games', 'win_percentage': 'Win Rate (%)'}
             )
