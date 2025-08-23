@@ -208,6 +208,25 @@ def get_structure_combo_name(structure_combo):
         structure_name = get_structure_name(structure_id)
         structure_names.append(structure_name)
     return " - ".join(structure_names)
+    
+def get_structure_combo_with_icons(structure_combo, icon_size=24):
+    structure_ids = extract_structure_ids(structure_combo)
+    icon_html = '<div style="display: flex; align-items: center; gap: 2px;">'
+    
+    for structure_id in structure_ids:
+        structure_name = get_structure_name(structure_id)
+        icon = get_structure_icon(structure_id)
+        
+        if icon:
+            # Resize icon to the specified size
+            icon = icon.resize((icon_size, icon_size))
+            icon_base64 = image_to_base64(icon)
+            icon_html += f'<img src="data:image/png;base64,{icon_base64}" style="width: {icon_size}px; height: {icon_size}px;" title="{structure_name}">'
+        else:
+            icon_html += f'<span title="{structure_name}">{structure_id}</span>'
+    
+    icon_html += '</div>'
+    return icon_html
 
 # Function to get structure name by ID
 def get_structure_name(structure_id):
@@ -651,6 +670,9 @@ if st.session_state.data_loaded:
         opening_win_rates = opening_win_rates[opening_win_rates['count'] >= 5]  # Only openings with enough data
         opening_win_rates['win_percentage'] = opening_win_rates['mean'] * 100
         opening_win_rates['combo_name'] = opening_win_rates[structure_col].apply(get_structure_combo_name)
+        opening_win_rates['combo_with_icons'] = opening_win_rates[structure_col].apply(
+                lambda x: get_structure_combo_with_icons(x, icon_size=24)
+            )
         
         if len(opening_win_rates) > 0:
             fig = px.scatter(
@@ -660,8 +682,20 @@ if st.session_state.data_loaded:
                 size='count',
                 hover_name='combo_name',
                 title=f'Win Rate vs. Popularity of Opening Strategies ({structure_option})',
-                labels={'count': 'Number of Games', 'win_percentage': 'Win Rate (%)'}
+                labels={'count': 'Number of Games', 'win_percentage': 'Win Rate (%)'},
+                custom_data=['combo_with_icons']  # Add HTML with icons as custom data
             )
+            
+            # Update hover template to include icons
+            fig.update_traces(
+                hovertemplate=(
+                    "<b>%{customdata[0]}</b><br>" +
+                    "Games: %{x}<br>" +
+                    "Win Rate: %{y:.1f}%<br>" +
+                    "<extra></extra>"
+                )
+            )
+            
             fig.add_hline(y=50, line_dash="dash", line_color="red", annotation_text="50% Win Rate")
             st.plotly_chart(fig, use_container_width=True)
         else:
