@@ -48,7 +48,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Initialize cookie manager
-@st.cache_resource
+#@st.cache_resource
 def get_cookie_manager():
     return stx.CookieManager()
 
@@ -99,7 +99,7 @@ st.markdown('<h1 class="main-header">🎮 Stormgate Strategy Analyzer</h1>', uns
 st.markdown("Analyze opening strategies, unit compositions, and win rates across different match-ups and leagues.")
 
 # Load data function with caching
-@st.cache_data
+#@st.cache_data
 def load_data(file_path):
     df = pd.read_csv(file_path)
     
