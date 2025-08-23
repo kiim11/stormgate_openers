@@ -738,23 +738,25 @@ if st.session_state.data_loaded:
                 st.markdown("**Top 10 Two-Unit Combinations**")
                 for i, (unit_combo, count) in enumerate(top_unit_2.items()):
                     unit_ids = extract_ids_from_composition(unit_combo)
-                    st.markdown(f'<div class="icon-row"><span class="rank-number">#{i+1}</span>', unsafe_allow_html=True)
+                    # Only show if it's actually 2 units
+                    if len(unit_ids) == 2:
+                        st.markdown(f'<div class="icon-row"><span class="rank-number">#{i+1}</span>', unsafe_allow_html=True)
+                        
+                        # Create icon container
+                        icon_html = '<div class="icon-container">'
+                        for unit_id in unit_ids:
+                            icon = get_unit_icon(unit_id.strip())
+                            unit_name = get_unit_name(unit_id.strip())
+                            if icon:
+                                icon_base64 = image_to_base64(icon)
+                                icon_html += f'<img src="data:image/png;base64,{icon_base64}" class="unit-icon" title="{unit_name}">'
+                            else:
+                                icon_html += f'<span title="{unit_name}">{unit_id.strip()}</span>'
+                        icon_html += f'<span class="structure-count">{count}</span></div>'
+                        
+                        st.markdown(icon_html, unsafe_allow_html=True)
+                        st.markdown('</div>', unsafe_allow_html=True)
                     
-                    # Create icon container
-                    icon_html = '<div class="icon-container">'
-                    for unit_id in unit_ids:
-                        icon = get_unit_icon(unit_id.strip())
-                        unit_name = get_unit_name(unit_id.strip())
-                        if icon:
-                            icon_base64 = image_to_base64(icon)
-                            icon_html += f'<img src="data:image/png;base64,{icon_base64}" class="unit-icon" title="{unit_name}">'
-                        else:
-                            icon_html += f'<span title="{unit_name}">{unit_id.strip()}</span>'
-                    icon_html += f'<span class="structure-count">{count}</span></div>'
-                    
-                    st.markdown(icon_html, unsafe_allow_html=True)
-                    st.markdown('</div>', unsafe_allow_html=True)
-                
             else:
                 st.info("No data available for two-unit combinations")
         
@@ -769,23 +771,25 @@ if st.session_state.data_loaded:
                 st.markdown("**Top 10 Three-Unit Combinations**")
                 for i, (unit_combo, count) in enumerate(top_unit_3.items()):
                     unit_ids = extract_ids_from_composition(unit_combo)
-                    st.markdown(f'<div class="icon-row"><span class="rank-number">#{i+1}</span>', unsafe_allow_html=True)
+                    # Only show if it's actually 3 units
+                    if len(unit_ids) == 3:
+                        st.markdown(f'<div class="icon-row"><span class="rank-number">#{i+1}</span>', unsafe_allow_html=True)
+                        
+                        # Create icon container
+                        icon_html = '<div class="icon-container">'
+                        for unit_id in unit_ids:
+                            icon = get_unit_icon(unit_id.strip())
+                            unit_name = get_unit_name(unit_id.strip())
+                            if icon:
+                                icon_base64 = image_to_base64(icon)
+                                icon_html += f'<img src="data:image/png;base64,{icon_base64}" class="unit-icon" title="{unit_name}">'
+                            else:
+                                icon_html += f'<span title="{unit_name}">{unit_id.strip()}</span>'
+                        icon_html += f'<span class="structure-count">{count}</span></div>'
+                        
+                        st.markdown(icon_html, unsafe_allow_html=True)
+                        st.markdown('</div>', unsafe_allow_html=True)
                     
-                    # Create icon container
-                    icon_html = '<div class="icon-container">'
-                    for unit_id in unit_ids:
-                        icon = get_unit_icon(unit_id.strip())
-                        unit_name = get_unit_name(unit_id.strip())
-                        if icon:
-                            icon_base64 = image_to_base64(icon)
-                            icon_html += f'<img src="data:image/png;base64,{icon_base64}" class="unit-icon" title="{unit_name}">'
-                        else:
-                            icon_html += f'<span title="{unit_name}">{unit_id.strip()}</span>'
-                    icon_html += f'<span class="structure-count">{count}</span></div>'
-                    
-                    st.markdown(icon_html, unsafe_allow_html=True)
-                    st.markdown('</div>', unsafe_allow_html=True)
-                
             else:
                 st.info("No data available for three-unit combinations")
                 
@@ -802,23 +806,25 @@ if st.session_state.data_loaded:
                 st.markdown("**Top 10 Four-Unit Combinations**")
                 for i, (unit_combo, count) in enumerate(top_unit_4.items()):
                     unit_ids = extract_ids_from_composition(unit_combo)
-                    st.markdown(f'<div class="icon-row"><span class="rank-number">#{i+1}</span>', unsafe_allow_html=True)
+                    # Only show if it's actually 4 units
+                    if len(unit_ids) == 4:
+                        st.markdown(f'<div class="icon-row"><span class="rank-number">#{i+1}</span>', unsafe_allow_html=True)
+                        
+                        # Create icon container
+                        icon_html = '<div class="icon-container">'
+                        for unit_id in unit_ids:
+                            icon = get_unit_icon(unit_id.strip())
+                            unit_name = get_unit_name(unit_id.strip())
+                            if icon:
+                                icon_base64 = image_to_base64(icon)
+                                icon_html += f'<img src="data:image/png;base64,{icon_base64}" class="unit-icon" title="{unit_name}">'
+                            else:
+                                icon_html += f'<span title="{unit_name}">{unit_id.strip()}</span>'
+                        icon_html += f'<span class="structure-count">{count}</span></div>'
+                        
+                        st.markdown(icon_html, unsafe_allow_html=True)
+                        st.markdown('</div>', unsafe_allow_html=True)
                     
-                    # Create icon container
-                    icon_html = '<div class="icon-container">'
-                    for unit_id in unit_ids:
-                        icon = get_unit_icon(unit_id.strip())
-                        unit_name = get_unit_name(unit_id.strip())
-                        if icon:
-                            icon_base64 = image_to_base64(icon)
-                            icon_html += f'<img src="data:image/png;base64,{icon_base64}" class="unit-icon" title="{unit_name}">'
-                        else:
-                            icon_html += f'<span title="{unit_name}">{unit_id.strip()}</span>'
-                    icon_html += f'<span class="structure-count">{count}</span></div>'
-                    
-                    st.markdown(icon_html, unsafe_allow_html=True)
-                    st.markdown('</div>', unsafe_allow_html=True)
-                
             else:
                 st.info("No data available for four-unit combinations")
                 
@@ -854,7 +860,7 @@ if st.session_state.data_loaded:
             else:
                 st.info("No data available for unit compositions")
         
-        # Unit composition win rates
+        # Unit composition win rates with custom graph (similar to opening strategies)
         st.subheader("Unit Composition Win Rates")
         
         # Create a selectbox to choose which unit count to analyze
@@ -870,22 +876,48 @@ if st.session_state.data_loaded:
         unit_comp_win_rates = st.session_state.filtered_df.groupby(unit_col)['win'].agg(['mean', 'count']).reset_index()
         unit_comp_win_rates = unit_comp_win_rates[unit_comp_win_rates['count'] >= 3]  # Only compositions with enough data
         unit_comp_win_rates['win_percentage'] = unit_comp_win_rates['mean'] * 100
+        unit_comp_win_rates['combo_name'] = unit_comp_win_rates[unit_col].apply(get_unit_combo_name)
+        unit_comp_win_rates['combo_with_icons'] = unit_comp_win_rates[unit_col].apply(
+            lambda x: get_unit_combo_with_icons(x, icon_size=24)
+        )
         
         if len(unit_comp_win_rates) > 0:
+            # Create custom scatter plot similar to opening strategies
             fig = px.scatter(
                 unit_comp_win_rates,
                 x='count',
                 y='win_percentage',
                 size='count',
-                hover_name=unit_col,
+                hover_name='combo_name',
                 title=f'Win Rate vs. Popularity of {unit_option} Compositions',
                 labels={'count': 'Number of Games', 'win_percentage': 'Win Rate (%)'}
+            )
+            
+            # Update hover template
+            fig.update_traces(
+                hovertemplate=(
+                    "<b>%{hovertext}</b><br>" +
+                    "Games: %{x}<br>" +
+                    "Win Rate: %{y:.1f}%<br>" +
+                    "<extra></extra>"
+                )
+            )
+            
+            # Add styling
+            fig.update_layout(
+                hoverlabel=dict(
+                    bgcolor="white",
+                    font_size=14,
+                    font_family="Arial"
+                ),
+                xaxis_title="Number of Games (Popularity)",
+                yaxis_title="Win Rate (%)",
+                showlegend=False
             )
             fig.add_hline(y=50, line_dash="dash", line_color="red", annotation_text="50% Win Rate")
             st.plotly_chart(fig, use_container_width=True)
         else:
             st.info(f"Not enough data to display win rates for {unit_option.lower()}")
-    
     with tab4:
         st.markdown('<h2 class="section-header">Map Analysis</h2>', unsafe_allow_html=True)
         
