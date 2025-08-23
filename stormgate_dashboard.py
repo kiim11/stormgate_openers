@@ -53,23 +53,25 @@ st.markdown("""
     .unit-icon {
         width: 36px;
         height: 36px;
-        margin-right: 5px;
+        margin: 2px;
         border-radius: 4px;
         object-fit: cover;
     }
     .structure-icon {
         width: 36px;
         height: 36px;
-        margin-right: 5px;
+        margin: 2px;
         border-radius: 4px;
         object-fit: cover;
     }
-    .unit-name {
+    .icon-container {
         display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
         align-items: center;
-        margin-bottom: 5px;
+        justify-content: flex-start;
     }
-    .structure-row {
+    .icon-row {
         display: flex;
         align-items: center;
         margin-bottom: 10px;
@@ -82,6 +84,11 @@ st.markdown("""
         margin-left: 10px;
         min-width: 50px;
         text-align: right;
+    }
+    .rank-number {
+        font-weight: bold;
+        margin-right: 10px;
+        min-width: 30px;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -127,7 +134,7 @@ def load_units_data():
         with open('units.json', 'r') as f:
             units_data = json.load(f)
         # Create a mapping from ID to unit data
-        return {unit['id']: unit for unit in units_data if 'button_icon_path' in unit}
+        return {unit['id']: unit for unit in units_data}
     except FileNotFoundError:
         st.error("units.json file not found. Please make sure it's in the same directory.")
         return {}
@@ -141,7 +148,7 @@ def load_upgrades_data():
         with open('upgrades.json', 'r') as f:
             upgrades_data = json.load(f)
         # Create a mapping from ID to upgrade data
-        return {upgrade['id']: upgrade for upgrade in upgrades_data if 'button_icon_path' in upgrade}
+        return {upgrade['id']: upgrade for upgrade in upgrades_data}
     except FileNotFoundError:
         st.error("upgrades.json file not found. Please make sure it's in the same directory.")
         return {}
@@ -156,7 +163,7 @@ upgrades_data = load_upgrades_data()
 # Function to get unit icon by ID
 @st.cache_data
 def get_unit_icon(unit_id):
-    if unit_id in units_data:
+    if unit_id in units_data and 'button_icon_path' in units_data[unit_id]:
         icon_path = units_data[unit_id]['button_icon_path']
         if icon_path:
             try:
@@ -169,16 +176,28 @@ def get_unit_icon(unit_id):
                 st.error(f"Error loading icon for {unit_id}: {e}")
     return None
 
+# Function to get unit name by ID
+def get_unit_name(unit_id):
+    if unit_id in units_data and 'name' in units_data[unit_id]:
+        return units_data[unit_id]['name']
+    return unit_id
+
 # Function to get structure icon by ID
 @st.cache_data
 def get_structure_icon(structure_id):
     # Structures are also in units.json, so we can use the same function
     return get_unit_icon(structure_id)
 
+# Function to get structure name by ID
+def get_structure_name(structure_id):
+    if structure_id in units_data and 'name' in units_data[structure_id]:
+        return units_data[structure_id]['name']
+    return structure_id
+
 # Function to get upgrade icon by ID
 @st.cache_data
 def get_upgrade_icon(upgrade_id):
-    if upgrade_id in upgrades_data:
+    if upgrade_id in upgrades_data and 'button_icon_path' in upgrades_data[upgrade_id]:
         icon_path = upgrades_data[upgrade_id]['button_icon_path']
         if icon_path:
             try:
@@ -190,6 +209,12 @@ def get_upgrade_icon(upgrade_id):
             except Exception as e:
                 st.error(f"Error loading icon for {upgrade_id}: {e}")
     return None
+
+# Function to get upgrade name by ID
+def get_upgrade_name(upgrade_id):
+    if upgrade_id in upgrades_data and 'name' in upgrades_data[upgrade_id]:
+        return upgrades_data[upgrade_id]['name']
+    return upgrade_id
 
 # Function to extract IDs from composition strings
 def extract_ids_from_composition(comp_str):
@@ -213,6 +238,12 @@ def extract_structure_ids(opening_str):
 # Function to save filters to local storage
 def save_filters_to_storage():
     local_storage.setItem("stormgate_filters", json.dumps(st.session_state.filters))
+
+# Function to convert image to base64 for HTML display
+def image_to_base64(image):
+    buffered = io.BytesIO()
+    image.save(buffered, format="PNG")
+    return base64.b64encode(buffered.getvalue()).decode()
 
 # Title and description
 st.markdown('<h1 class="main-header">🎮 Stormgate Strategy Analyzer</h1>', unsafe_allow_html=True)
@@ -423,7 +454,7 @@ if st.session_state.data_loaded:
         with col2:
             # Win rate by league
             league_win_rate = st.session_state.filtered_df.groupby('league_before')['win'].agg(['mean', 'count']).reset_index()
-            league_win_rate['win_percentage'] = league_win_rate['mean'] * 100
+            league_win_rate['win_percentage'] = league_win_rate['mean'] * 极速100
             league_win_rate = league_win_rate[league_win_rate['count'] >= 5]  # Only show leagues with enough data
             
             if len(league_win_rate) > 0:
@@ -432,7 +463,7 @@ if st.session_state.data_loaded:
                     x='league_before', 
                     y='win_percentage',
                     title='Win Rate by League',
-                    labels={'league_before': 'League', 'win_percentage': 'Win Rate (%)'},
+                    labels={'league_before': 'League', '极速win_percentage': 'Win Rate (%)'},
                     text='count',
                     color='win_percentage',
                     color_continuous_scale='RdYlGn'
@@ -449,11 +480,11 @@ if st.session_state.data_loaded:
         opponent_league_win_rate['win_percentage'] = opponent_league_win_rate['mean'] * 100
         opponent_league_win_rate = opponent_league_win_rate[opponent_league_win_rate['count'] >= 5]  # Only show leagues with enough data
         
-        if len(opponent_league_win_rate) > 0:
+        if len(opponent_league极速_win_rate) > 0:
             fig = px.bar(
                 opponent_league_win_rate, 
                 x='opponent_league_before', 
-                y='win_percentage',
+                y极速='win_percentage',
                 title='Win Rate by Opponent League',
                 labels={'opponent_league_before': 'Opponent League', 'win_percentage': 'Win Rate (%)'},
                 text='count',
@@ -481,20 +512,22 @@ if st.session_state.data_loaded:
                 st.markdown("**Top 10 First 3 Structures**")
                 for i, (structure_combo, count) in enumerate(structure_3_counts.items()):
                     structure_ids = extract_structure_ids(structure_combo)
-                    col1, col2 = st.columns([1, 4])
-                    with col1:
-                        st.markdown(f"**#{i+1}**")
-                    with col2:
-                        icon_cols = st.columns(len(structure_ids) + 1)
-                        for j, structure_id in enumerate(structure_ids):
-                            with icon_cols[j]:
-                                icon = get_structure_icon(structure_id.strip())
-                                if icon:
-                                    st.image(icon, caption=structure_id.strip(), width=36)
-                                else:
-                                    st.text(structure_id.strip())
-                        with icon_cols[-1]:
-                            st.markdown(f"**{count}**")
+                    st.markdown(f'<div class="icon-row"><span class="rank-number">#{i+1}</span>', unsafe_allow_html=True)
+                    
+                    # Create icon container
+                    icon_html = '<div class="icon-container">'
+                    for structure_id in structure_ids:
+                        icon = get_structure_icon(structure_id.strip())
+                        structure_name = get_structure_name(structure_id.strip())
+                        if icon:
+                            icon_base64 = image_to_base64(icon)
+                            icon_html += f'<img src="data:image/png;base64,{icon_base64}" class="structure-icon" title="{structure_name}">'
+                        else:
+                            icon_html += f'<span title="{structure_name}">{structure_id.strip()}</span>'
+                    icon_html += f'<span class="structure-count">{count}</span></div>'
+                    
+                    st.markdown(icon_html, unsafe_allow_html=True)
+                    st.markdown('</div>', unsafe_allow_html=True)
             else:
                 st.info("No data available for first 3 structures")
         
@@ -503,22 +536,24 @@ if st.session_state.data_loaded:
             structure_4_counts = st.session_state.filtered_df['first_4_structures'].value_counts().head(10)
             if len(structure_4_counts) > 0:
                 st.markdown("**Top 10 First 4 Structures**")
-                for i, (structure_combo, count) in enumerate(structure_4_counts.items()):
+                for i, (structure_combo, count) in enumerate(structure极速_4_counts.items()):
                     structure_ids = extract_structure_ids(structure_combo)
-                    col1, col2 = st.columns([1, 4])
-                    with col1:
-                        st.markdown(f"**#{i+1}**")
-                    with col2:
-                        icon_cols = st.columns(len(structure_ids) + 1)
-                        for j, structure_id in enumerate(structure_ids):
-                            with icon_cols[j]:
-                                icon = get_structure_icon(structure_id.strip())
-                                if icon:
-                                    st.image(icon, caption=structure_id.strip(), width=36)
-                                else:
-                                    st.text(structure_id.strip())
-                        with icon_cols[-1]:
-                            st.markdown(f"**{count}**")
+                    st.markdown(f'<div class="icon-row"><span class="rank-number">#{i+1}</span>', unsafe_allow_html=True)
+                    
+                    # Create icon container
+                    icon_html = '<div class="icon-container">'
+                    for structure_id in structure_ids:
+                        icon = get_structure_icon(structure_id.strip())
+                        structure_name = get_structure_name(structure_id.strip())
+                        if icon:
+                            icon_base64 = image_to_base64(icon)
+                            icon_html += f'<img src="data:image/png;base64,{icon_base64}" class="structure-icon" title="{structure_name}">'
+                        else:
+                            icon_html += f'<span title="{structure_name}">{structure_id.strip()}</span>'
+                    icon_html += f'<span class="structure-count">{count}</span></div>'
+                    
+                    st.markdown(icon_html, unsafe_allow_html=True)
+                    st.markdown('</div>', unsafe_allow_html=True)
             else:
                 st.info("No data available for first 4 structures")
                 
@@ -531,20 +566,22 @@ if st.session_state.data_loaded:
                 st.markdown("**Top 10 First 5 Structures**")
                 for i, (structure_combo, count) in enumerate(structure_5_counts.items()):
                     structure_ids = extract_structure_ids(structure_combo)
-                    col1, col2 = st.columns([1, 4])
-                    with col1:
-                        st.markdown(f"**#{i+1}**")
-                    with col2:
-                        icon_cols = st.columns(len(structure_ids) + 1)
-                        for j, structure_id in enumerate(structure_ids):
-                            with icon_cols[j]:
-                                icon = get_structure_icon(structure_id.strip())
-                                if icon:
-                                    st.image(icon, caption=structure_id.strip(), width=36)
-                                else:
-                                    st.text(structure_id.strip())
-                        with icon_cols[-1]:
-                            st.markdown(f"**{count}**")
+                    st.markdown(f'<div class="icon-row"><span class="rank-number">#{极速i+1}</span>', unsafe_allow_html=True)
+                    
+                    # Create icon container
+                    icon_html = '<极速div class="icon-container">'
+                    for structure_id in structure_ids:
+                        icon = get_structure_icon(structure_id.strip())
+                        structure_name = get_structure_name(structure_id.strip())
+                        if icon:
+                            icon_base64 = image_to_base64(icon)
+                            icon_html += f'<img src="data:image/png;base64,{icon_base64}" class="structure-icon" title="{structure_name}">'
+                        else:
+                            icon_html += f'<span title="{structure_name}">{structure_id.strip()}</span>'
+                    icon_html += f'<span class="structure-count">{count}</span></div>'
+                    
+                    st.markdown(icon_html, unsafe_allow_html=True)
+                    st.markdown('</div>', unsafe_allow_html=True)
             else:
                 st.info("No data available for first 5 structures")
         
@@ -555,20 +592,22 @@ if st.session_state.data_loaded:
                 st.markdown("**Top 10 First 6 Structures**")
                 for i, (structure_combo, count) in enumerate(structure_6_counts.items()):
                     structure_ids = extract_structure_ids(structure_combo)
-                    col1, col2 = st.columns([1, 4])
-                    with col1:
-                        st.markdown(f"**#{i+1}**")
-                    with col2:
-                        icon_cols = st.columns(len(structure_ids) + 1)
-                        for j, structure_id in enumerate(structure_ids):
-                            with icon_cols[j]:
-                                icon = get_structure_icon(structure_id.strip())
-                                if icon:
-                                    st.image(icon, caption=structure_id.strip(), width=36)
-                                else:
-                                    st.text(structure_id.strip())
-                        with icon_cols[-1]:
-                            st.markdown(f"**{count}**")
+                    st.markdown(f'<div class="icon-row"><span class="rank-number">#{i+1}</span>', unsafe_allow_html=True)
+                    
+                    # Create icon container
+                    icon_html = '<div class="icon-container">'
+                    for structure_id in structure_ids:
+                        icon = get_structure_icon(structure_id.strip())
+                        structure_name = get_structure_name(structure_id.strip())
+                        if icon:
+                            icon_base64 = image_to_base64(icon)
+                            icon_html += f'<img src="data:image/png;base64,{icon_base64}" class="structure-icon" title="{structure_name}">'
+                        else:
+                            icon_html += f'<span title="{structure_name}">{structure_id.strip()}</span>'
+                    icon_html += f'<span class="structure-count">{count}</span></div>'
+                    
+                    st.markdown(icon_html, unsafe_allow_html=True)
+                    st.markdown('</div>', unsafe_allow_html=True)
             else:
                 st.info("No data available for first 6 structures")
         
@@ -587,7 +626,7 @@ if st.session_state.data_loaded:
         
         opening_win_rates = st.session_state.filtered_df.groupby(structure_col)['win'].agg(['mean', 'count']).reset_index()
         opening_win_rates = opening_win_rates[opening_win_rates['count'] >= 5]  # Only openings with enough data
-        opening_win_rates['win_percentage'] = opening_win_rates['mean'] * 100
+        opening极速_win_rates['win_percentage'] = opening_win_rates['mean'] * 100
         
         if len(opening_win_rates) > 0:
             fig = px.scatter(
@@ -623,20 +662,22 @@ if st.session_state.data_loaded:
                 st.markdown("**Top 10 Two-Unit Combinations**")
                 for i, (unit_combo, count) in enumerate(top_unit_2.items()):
                     unit_ids = extract_ids_from_composition(unit_combo)
-                    col1, col2 = st.columns([1, 4])
-                    with col1:
-                        st.markdown(f"**#{i+1}**")
-                    with col2:
-                        icon_cols = st.columns(len(unit_ids) + 1)
-                        for j, unit_id in enumerate(unit_ids):
-                            with icon_cols[j]:
-                                icon = get_unit_icon(unit_id.strip())
-                                if icon:
-                                    st.image(icon, caption=unit_id.strip(), width=36)
-                                else:
-                                    st.text(unit_id.strip())
-                        with icon_cols[-1]:
-                            st.markdown(f"**{count}**")
+                    st.markdown(f'<div class="icon-row"><span class="rank-number">#{i+1}</span>', unsafe_allow_html=True)
+                    
+                    # Create icon container
+                    icon_html = '<div class="icon-container">'
+                    for unit_id in unit_ids:
+                        icon = get_unit_icon(unit_id.strip())
+                        unit_name = get_unit_name(unit_id.strip())
+                        if icon:
+                            icon_base64 = image_to_base64(icon)
+                            icon_html += f'<img src="data:image/png;base64,{icon_base64}" class="unit-icon" title="{unit_name}">'
+                        else:
+                            icon_html += f'<span title="{unit_name}">{unit_id.strip()}</span>'
+                    icon_html += f'<span class="structure-count">{count}</span></div>'
+                    
+                    st.markdown(icon_html, unsafe_allow_html=True)
+                    st.markdown('</div>', unsafe_allow_html=True)
                 
             else:
                 st.info("No data available for two-unit combinations")
@@ -644,7 +685,7 @@ if st.session_state.data_loaded:
         with col2:
             # Get top unit combinations for 3 units
             unit_3_list = st.session_state.filtered_df['units_3'].dropna().tolist()
-            if unit_3_list:
+            if unit_极速3_list:
                 unit_3_counter = Counter(unit_3_list)
                 top_unit_3 = dict(unit_3_counter.most_common(10))
                 
@@ -652,20 +693,22 @@ if st.session_state.data_loaded:
                 st.markdown("**Top 10 Three-Unit Combinations**")
                 for i, (unit_combo, count) in enumerate(top_unit_3.items()):
                     unit_ids = extract_ids_from_composition(unit_combo)
-                    col1, col2 = st.columns([1, 4])
-                    with col1:
-                        st.markdown(f"**#{i+1}**")
-                    with col2:
-                        icon_cols = st.columns(len(unit_ids) + 1)
-                        for j, unit_id in enumerate(unit_ids):
-                            with icon_cols[j]:
-                                icon = get_unit_icon(unit_id.strip())
-                                if icon:
-                                    st.image(icon, caption=unit_id.strip(), width=36)
-                                else:
-                                    st.text(unit_id.strip())
-                        with icon_cols[-1]:
-                            st.markdown(f"**{count}**")
+                    st.markdown(f'<div class="icon-row"><span class="rank-number">#{i+1}</span>', unsafe_allow_html=True)
+                    
+                    # Create icon container
+                    icon_html = '<div class="icon-container">'
+                    for unit_id in unit_ids:
+                        icon = get_unit_icon(unit_id.strip())
+                        unit_name = get_unit_name(unit_id.strip())
+                        if icon:
+                            icon_base64 = image_to_base64(icon)
+                            icon_html += f'极速<img src="data:image/png;base64,{icon_base64}" class="unit-icon" title="{unit_name}">'
+                        else:
+                            icon_html += f'<span title="{unit_name}">{unit_id.strip()}</span>'
+                    icon_html += f'<span class="structure-count">{count}</span></div>'
+                    
+                    st.markdown(icon_html, unsafe_allow_html=True)
+                    st.markdown('</div>', unsafe_allow_html=True)
                 
             else:
                 st.info("No data available for three-unit combinations")
@@ -683,20 +726,22 @@ if st.session_state.data_loaded:
                 st.markdown("**Top 10 Four-Unit Combinations**")
                 for i, (unit_combo, count) in enumerate(top_unit_4.items()):
                     unit_ids = extract_ids_from_composition(unit_combo)
-                    col1, col2 = st.columns([1, 4])
-                    with col1:
-                        st.markdown(f"**#{i+1}**")
-                    with col2:
-                        icon_cols = st.columns(len(unit_ids) + 1)
-                        for j, unit_id in enumerate(unit_ids):
-                            with icon_cols[j]:
-                                icon = get_unit_icon(unit_id.strip())
-                                if icon:
-                                    st.image(icon, caption=unit_id.strip(), width=36)
-                                else:
-                                    st.text(unit_id.strip())
-                        with icon_cols[-1]:
-                            st.markdown(f"**{count}**")
+                    st.markdown(f'<div class="icon-row"><span class="rank-number">#{i+极速1}</span>', unsafe_allow_html=True)
+                    
+                    # Create icon container
+                    icon_html = '<div class="icon-container">'
+                    for unit_id in unit_ids:
+                        icon = get_unit_icon(unit_id.strip())
+                        unit_name = get_unit_name(unit_id.strip())
+                        if icon:
+                            icon_base64 = image极速_to_base64(icon)
+                            icon_html += f'<img src="data:image/png;base64,{icon_base64}" class="unit-icon" title="{unit_name}">'
+                        else:
+                            icon_html += f'<span title="{unit_name}">{unit_id.strip()}</span>'
+                    icon_html += f'<span class="structure-count">{count}</span></div>'
+                    
+                    st.markdown(icon_html, unsafe_allow_html=True)
+                    st.markdown('</div>', unsafe_allow_html=True)
                 
             else:
                 st.info("No data available for four-unit combinations")
@@ -715,17 +760,21 @@ if st.session_state.data_loaded:
                 # Create a custom visualization with icons
                 st.markdown("**Top 15 Most Frequently Built Units**")
                 for i, (unit_id, count) in enumerate(top_units.items()):
-                    col1, col2, col3 = st.columns([1, 3, 1])
-                    with col1:
-                        st.markdown(f"**#{i+1}**")
-                    with col2:
-                        icon = get_unit_icon(unit_id)
-                        if icon:
-                            st.image(icon, caption=unit_id, width=36)
-                        else:
-                            st.text(unit_id)
-                    with col3:
-                        st.markdown(f"**{count}**")
+                    st.markdown(f'<div class="icon-row"><span class="rank-number">#{i+1}</span>', unsafe_allow_html=True)
+                    
+                    # Create icon container
+                    icon_html = '<div class="icon-container">'
+                    icon = get_unit_icon(unit_id)
+                    unit_name = get_unit_name(unit_id)
+                    if icon:
+                        icon_base64 = image_to_base64(icon)
+                        icon_html += f'<img src="data:image/png;base64,{icon_base64}" class="unit-icon" title="{unit_name}">'
+                    else:
+                        icon_html += f'<span title="{unit_name}">{unit_id}</span>'
+                    icon_html += f'<span class="structure-count">{count}</span></div>'
+                    
+                    st.markdown(icon_html, unsafe_allow_html=True)
+                    st.markdown('</div>', unsafe_allow_html=True)
             else:
                 st.info("No data available for unit compositions")
         
@@ -742,7 +791,7 @@ if st.session_state.data_loaded:
         # Map selection to column name
         unit_col = f"units_{unit_option[0]}"
         
-        unit_comp_win_rates = st.session_state.filtered_df.groupby(unit_col)['win'].agg(['mean', 'count']).reset_index()
+        unit_comp_win_rates = st.session_state.filtered_df.groupby(unit_col)['win'].agg(['极速mean', 'count']).reset_index()
         unit_comp_win_rates = unit_comp_win_rates[unit_comp_win_rates['count'] >= 3]  # Only compositions with enough data
         unit_comp_win_rates['win_percentage'] = unit_comp_win_rates['mean'] * 100
         
