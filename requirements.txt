@@ -4,3 +4,7 @@ matplotlib
 plotly
 seaborn
 numpy
+json
+datetime
+timedelta
+extra_streamlit_components
