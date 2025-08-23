@@ -454,7 +454,7 @@ if st.session_state.data_loaded:
         with col2:
             # Win rate by league
             league_win_rate = st.session_state.filtered_df.groupby('league_before')['win'].agg(['mean', 'count']).reset_index()
-            league_win_rate['win_percentage'] = league_win_rate['mean'] * 极速100
+            league_win_rate['win_percentage'] = league_win_rate['mean'] * 100
             league_win_rate = league_win_rate[league_win_rate['count'] >= 5]  # Only show leagues with enough data
             
             if len(league_win_rate) > 0:
@@ -463,7 +463,7 @@ if st.session_state.data_loaded:
                     x='league_before', 
                     y='win_percentage',
                     title='Win Rate by League',
-                    labels={'league_before': 'League', '极速win_percentage': 'Win Rate (%)'},
+                    labels={'league_before': 'League', 'win_percentage': 'Win Rate (%)'},
                     text='count',
                     color='win_percentage',
                     color_continuous_scale='RdYlGn'
@@ -480,11 +480,11 @@ if st.session_state.data_loaded:
         opponent_league_win_rate['win_percentage'] = opponent_league_win_rate['mean'] * 100
         opponent_league_win_rate = opponent_league_win_rate[opponent_league_win_rate['count'] >= 5]  # Only show leagues with enough data
         
-        if len(opponent_league极速_win_rate) > 0:
+        if len(opponent_league_win_rate) > 0:
             fig = px.bar(
                 opponent_league_win_rate, 
                 x='opponent_league_before', 
-                y极速='win_percentage',
+                y='win_percentage',
                 title='Win Rate by Opponent League',
                 labels={'opponent_league_before': 'Opponent League', 'win_percentage': 'Win Rate (%)'},
                 text='count',
@@ -536,7 +536,7 @@ if st.session_state.data_loaded:
             structure_4_counts = st.session_state.filtered_df['first_4_structures'].value_counts().head(10)
             if len(structure_4_counts) > 0:
                 st.markdown("**Top 10 First 4 Structures**")
-                for i, (structure_combo, count) in enumerate(structure极速_4_counts.items()):
+                for i, (structure_combo, count) in enumerate(structure_4_counts.items()):
                     structure_ids = extract_structure_ids(structure_combo)
                     st.markdown(f'<div class="icon-row"><span class="rank-number">#{i+1}</span>', unsafe_allow_html=True)
                     
@@ -566,10 +566,10 @@ if st.session_state.data_loaded:
                 st.markdown("**Top 10 First 5 Structures**")
                 for i, (structure_combo, count) in enumerate(structure_5_counts.items()):
                     structure_ids = extract_structure_ids(structure_combo)
-                    st.markdown(f'<div class="icon-row"><span class="rank-number">#{极速i+1}</span>', unsafe_allow_html=True)
+                    st.markdown(f'<div class="icon-row"><span class="rank-number">#{i+1}</span>', unsafe_allow_html=True)
                     
                     # Create icon container
-                    icon_html = '<极速div class="icon-container">'
+                    icon_html = '<div class="icon-container">'
                     for structure_id in structure_ids:
                         icon = get_structure_icon(structure_id.strip())
                         structure_name = get_structure_name(structure_id.strip())
@@ -626,7 +626,7 @@ if st.session_state.data_loaded:
         
         opening_win_rates = st.session_state.filtered_df.groupby(structure_col)['win'].agg(['mean', 'count']).reset_index()
         opening_win_rates = opening_win_rates[opening_win_rates['count'] >= 5]  # Only openings with enough data
-        opening极速_win_rates['win_percentage'] = opening_win_rates['mean'] * 100
+        opening_win_rates['win_percentage'] = opening_win_rates['mean'] * 100
         
         if len(opening_win_rates) > 0:
             fig = px.scatter(
@@ -685,7 +685,7 @@ if st.session_state.data_loaded:
         with col2:
             # Get top unit combinations for 3 units
             unit_3_list = st.session_state.filtered_df['units_3'].dropna().tolist()
-            if unit_极速3_list:
+            if unit_3_list:
                 unit_3_counter = Counter(unit_3_list)
                 top_unit_3 = dict(unit_3_counter.most_common(10))
                 
@@ -702,7 +702,7 @@ if st.session_state.data_loaded:
                         unit_name = get_unit_name(unit_id.strip())
                         if icon:
                             icon_base64 = image_to_base64(icon)
-                            icon_html += f'极速<img src="data:image/png;base64,{icon_base64}" class="unit-icon" title="{unit_name}">'
+                            icon_html += f'<img src="data:image/png;base64,{icon_base64}" class="unit-icon" title="{unit_name}">'
                         else:
                             icon_html += f'<span title="{unit_name}">{unit_id.strip()}</span>'
                     icon_html += f'<span class="structure-count">{count}</span></div>'
@@ -726,7 +726,7 @@ if st.session_state.data_loaded:
                 st.markdown("**Top 10 Four-Unit Combinations**")
                 for i, (unit_combo, count) in enumerate(top_unit_4.items()):
                     unit_ids = extract_ids_from_composition(unit_combo)
-                    st.markdown(f'<div class="icon-row"><span class="rank-number">#{i+极速1}</span>', unsafe_allow_html=True)
+                    st.markdown(f'<div class="icon-row"><span class="rank-number">#{i+1}</span>', unsafe_allow_html=True)
                     
                     # Create icon container
                     icon_html = '<div class="icon-container">'
@@ -734,7 +734,7 @@ if st.session_state.data_loaded:
                         icon = get_unit_icon(unit_id.strip())
                         unit_name = get_unit_name(unit_id.strip())
                         if icon:
-                            icon_base64 = image极速_to_base64(icon)
+                            icon_base64 = image_to_base64(icon)
                             icon_html += f'<img src="data:image/png;base64,{icon_base64}" class="unit-icon" title="{unit_name}">'
                         else:
                             icon_html += f'<span title="{unit_name}">{unit_id.strip()}</span>'
@@ -791,7 +791,7 @@ if st.session_state.data_loaded:
         # Map selection to column name
         unit_col = f"units_{unit_option[0]}"
         
-        unit_comp_win_rates = st.session_state.filtered_df.groupby(unit_col)['win'].agg(['极速mean', 'count']).reset_index()
+        unit_comp_win_rates = st.session_state.filtered_df.groupby(unit_col)['win'].agg(['mean', 'count']).reset_index()
         unit_comp_win_rates = unit_comp_win_rates[unit_comp_win_rates['count'] >= 3]  # Only compositions with enough data
         unit_comp_win_rates['win_percentage'] = unit_comp_win_rates['mean'] * 100
         
