@@ -696,7 +696,7 @@ if st.session_state.data_loaded:
             # Update hover template to include icons
             fig.update_traces(
                 hovertemplate=(
-                    "<b>%{customdata[0]}</b><br>" +
+                    "<b>%{hover_name}</b><br>" +
                     "Games: %{x}<br>" +
                     "Win Rate: %{y:.1f}%<br>" +
                     "<extra></extra>"
