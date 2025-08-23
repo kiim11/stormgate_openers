@@ -10,6 +10,7 @@ import requests
 from PIL import Image
 import io
 import re
+import base64
 
 # Set page configuration
 st.set_page_config(
@@ -56,10 +57,31 @@ st.markdown("""
         border-radius: 4px;
         object-fit: cover;
     }
+    .structure-icon {
+        width: 36px;
+        height: 36px;
+        margin-right: 5px;
+        border-radius: 4px;
+        object-fit: cover;
+    }
     .unit-name {
         display: flex;
         align-items: center;
         margin-bottom: 5px;
+    }
+    .structure-row {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+        padding: 5px;
+        border-radius: 5px;
+        background-color: #f8f9fa;
+    }
+    .structure-count {
+        font-weight: bold;
+        margin-left: 10px;
+        min-width: 50px;
+        text-align: right;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -147,6 +169,12 @@ def get_unit_icon(unit_id):
                 st.error(f"Error loading icon for {unit_id}: {e}")
     return None
 
+# Function to get structure icon by ID
+@st.cache_data
+def get_structure_icon(structure_id):
+    # Structures are also in units.json, so we can use the same function
+    return get_unit_icon(structure_id)
+
 # Function to get upgrade icon by ID
 @st.cache_data
 def get_upgrade_icon(upgrade_id):
@@ -172,6 +200,15 @@ def extract_ids_from_composition(comp_str):
     pattern = r'([A-Za-z0-9_]+)(?:\([^)]*\))?'
     matches = re.findall(pattern, comp_str)
     return matches
+
+# Function to extract structure IDs from opening strings
+def extract_structure_ids(opening_str):
+    if pd.isna(opening_str):
+        return []
+    
+    # Split by '-' to get individual structures
+    structures = opening_str.split('-')
+    return [s.strip() for s in structures if s.strip()]
 
 # Function to save filters to local storage
 def save_filters_to_storage():
@@ -441,14 +478,23 @@ if st.session_state.data_loaded:
             # First 3 structures
             structure_3_counts = st.session_state.filtered_df['first_3_structures'].value_counts().head(10)
             if len(structure_3_counts) > 0:
-                fig = px.bar(
-                    x=structure_3_counts.values,
-                    y=structure_3_counts.index,
-                    orientation='h',
-                    title='Top 10 First 3 Structures',
-                    labels={'x': 'Frequency', 'y': 'Structures'}
-                )
-                st.plotly_chart(fig, use_container_width=True)
+                st.markdown("**Top 10 First 3 Structures**")
+                for i, (structure_combo, count) in enumerate(structure_3_counts.items()):
+                    structure_ids = extract_structure_ids(structure_combo)
+                    col1, col2 = st.columns([1, 4])
+                    with col1:
+                        st.markdown(f"**#{i+1}**")
+                    with col2:
+                        icon_cols = st.columns(len(structure_ids) + 1)
+                        for j, structure_id in enumerate(structure_ids):
+                            with icon_cols[j]:
+                                icon = get_structure_icon(structure_id.strip())
+                                if icon:
+                                    st.image(icon, caption=structure_id.strip(), width=36)
+                                else:
+                                    st.text(structure_id.strip())
+                        with icon_cols[-1]:
+                            st.markdown(f"**{count}**")
             else:
                 st.info("No data available for first 3 structures")
         
@@ -456,14 +502,23 @@ if st.session_state.data_loaded:
             # First 4 structures
             structure_4_counts = st.session_state.filtered_df['first_4_structures'].value_counts().head(10)
             if len(structure_4_counts) > 0:
-                fig = px.bar(
-                    x=structure_4_counts.values,
-                    y=structure_4_counts.index,
-                    orientation='h',
-                    title='Top 10 First 4 Structures',
-                    labels={'x': 'Frequency', 'y': 'Structures'}
-                )
-                st.plotly_chart(fig, use_container_width=True)
+                st.markdown("**Top 10 First 4 Structures**")
+                for i, (structure_combo, count) in enumerate(structure_4_counts.items()):
+                    structure_ids = extract_structure_ids(structure_combo)
+                    col1, col2 = st.columns([1, 4])
+                    with col1:
+                        st.markdown(f"**#{i+1}**")
+                    with col2:
+                        icon_cols = st.columns(len(structure_ids) + 1)
+                        for j, structure_id in enumerate(structure_ids):
+                            with icon_cols[j]:
+                                icon = get_structure_icon(structure_id.strip())
+                                if icon:
+                                    st.image(icon, caption=structure_id.strip(), width=36)
+                                else:
+                                    st.text(structure_id.strip())
+                        with icon_cols[-1]:
+                            st.markdown(f"**{count}**")
             else:
                 st.info("No data available for first 4 structures")
                 
@@ -473,14 +528,23 @@ if st.session_state.data_loaded:
             # First 5 structures
             structure_5_counts = st.session_state.filtered_df['first_5_structures'].value_counts().head(10)
             if len(structure_5_counts) > 0:
-                fig = px.bar(
-                    x=structure_5_counts.values,
-                    y=structure_5_counts.index,
-                    orientation='h',
-                    title='Top 10 First 5 Structures',
-                    labels={'x': 'Frequency', 'y': 'Structures'}
-                )
-                st.plotly_chart(fig, use_container_width=True)
+                st.markdown("**Top 10 First 5 Structures**")
+                for i, (structure_combo, count) in enumerate(structure_5_counts.items()):
+                    structure_ids = extract_structure_ids(structure_combo)
+                    col1, col2 = st.columns([1, 4])
+                    with col1:
+                        st.markdown(f"**#{i+1}**")
+                    with col2:
+                        icon_cols = st.columns(len(structure_ids) + 1)
+                        for j, structure_id in enumerate(structure_ids):
+                            with icon_cols[j]:
+                                icon = get_structure_icon(structure_id.strip())
+                                if icon:
+                                    st.image(icon, caption=structure_id.strip(), width=36)
+                                else:
+                                    st.text(structure_id.strip())
+                        with icon_cols[-1]:
+                            st.markdown(f"**{count}**")
             else:
                 st.info("No data available for first 5 structures")
         
@@ -488,14 +552,23 @@ if st.session_state.data_loaded:
             # First 6 structures
             structure_6_counts = st.session_state.filtered_df['first_6_structures'].value_counts().head(10)
             if len(structure_6_counts) > 0:
-                fig = px.bar(
-                    x=structure_6_counts.values,
-                    y=structure_6_counts.index,
-                    orientation='h',
-                    title='Top 10 First 6 Structures',
-                    labels={'x': 'Frequency', 'y': 'Structures'}
-                )
-                st.plotly_chart(fig, use_container_width=True)
+                st.markdown("**Top 10 First 6 Structures**")
+                for i, (structure_combo, count) in enumerate(structure_6_counts.items()):
+                    structure_ids = extract_structure_ids(structure_combo)
+                    col1, col2 = st.columns([1, 4])
+                    with col1:
+                        st.markdown(f"**#{i+1}**")
+                    with col2:
+                        icon_cols = st.columns(len(structure_ids) + 1)
+                        for j, structure_id in enumerate(structure_ids):
+                            with icon_cols[j]:
+                                icon = get_structure_icon(structure_id.strip())
+                                if icon:
+                                    st.image(icon, caption=structure_id.strip(), width=36)
+                                else:
+                                    st.text(structure_id.strip())
+                        with icon_cols[-1]:
+                            st.markdown(f"**{count}**")
             else:
                 st.info("No data available for first 6 structures")
         
