@@ -480,21 +480,21 @@ if st.session_state.data_loaded:
     else:
         st.sidebar.info("Using data from: uploaded file")
     
-    # Display basic metrics
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.metric("Total Matches", len(st.session_state.filtered_df))
-    with col2:
-        win_rate = st.session_state.filtered_df['win'].mean() * 100 if len(st.session_state.filtered_df) > 0 else 0
-        st.metric("Overall Win Rate", f"{win_rate:.1f}%")
-    with col3:
-        st.metric("Unique Match-ups", st.session_state.filtered_df['match_up'].nunique())
-    with col4:
-        st.metric("Maps", st.session_state.filtered_df['map_name'].nunique())
-    
+
 
     with tab1:
         st.markdown('<h2 class="section-header">Win Rate Analysis</h2>', unsafe_allow_html=True)
+        # Display basic metrics
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            st.metric("Total Matches", len(st.session_state.filtered_df))
+        with col2:
+            win_rate = st.session_state.filtered_df['win'].mean() * 100 if len(st.session_state.filtered_df) > 0 else 0
+            st.metric("Overall Win Rate", f"{win_rate:.1f}%")
+        with col3:
+            st.metric("Unique Match-ups", st.session_state.filtered_df['match_up'].nunique())
+        with col4:
+            st.metric("Maps", st.session_state.filtered_df['map_name'].nunique())
         
         col1, col2 = st.columns(2)
         
