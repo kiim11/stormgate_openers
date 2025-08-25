@@ -294,7 +294,15 @@ def image_to_base64(image):
 # Title and description
 st.markdown('<h1 class="main-header">🎮 Stormgate Strategy Analyzer</h1>', unsafe_allow_html=True)
 st.markdown("Analyze opening strategies, unit compositions, and win rates across different match-ups and leagues.")
-
+# Tabs for different analyses
+tab1, tab2, tab3, tab4, tab5 = st.tabs([
+    "Win Rate Analysis", 
+    "Opening Strategies", 
+    "Unit Compositions", 
+    "Map Analysis", 
+    "Raw Data"
+])
+    
 # Load data function with caching
 @st.cache_data
 def load_data(file_path):
@@ -484,15 +492,7 @@ if st.session_state.data_loaded:
     with col4:
         st.metric("Maps", st.session_state.filtered_df['map_name'].nunique())
     
-    # Tabs for different analyses
-    tab1, tab2, tab3, tab4, tab5 = st.tabs([
-        "Win Rate Analysis", 
-        "Opening Strategies", 
-        "Unit Compositions", 
-        "Map Analysis", 
-        "Raw Data"
-    ])
-    
+
     with tab1:
         st.markdown('<h2 class="section-header">Win Rate Analysis</h2>', unsafe_allow_html=True)
         
