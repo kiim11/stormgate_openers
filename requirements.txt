@@ -4,8 +4,6 @@ matplotlib
 plotly
 seaborn
 numpy
-datetime
-timedelta
 extra_streamlit_components
 streamlit-local-storage
 requests
